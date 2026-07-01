@@ -14,6 +14,20 @@ export type Alumni = {
   is_published: boolean;
 };
 
+export type EventFormat = "in_person" | "virtual" | "hybrid";
+
+export type AlumniEvent = {
+  id: string;
+  title: string;
+  description: string | null;
+  format: EventFormat;
+  starts_at: string;
+  ends_at: string | null;
+  location: string | null;
+  zoom_url: string | null;
+  status: "scheduled" | "cancelled";
+};
+
 /** Initials for the framed-portrait / avatar placeholder. */
 export function initialsOf(name: string): string {
   return name
