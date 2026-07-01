@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   DMGS base — paper background, warm institutional texture.
+   Mirrors the HTML prototype's body treatment.
+   ============================================================ */
+@layer base {
+  :root {
+    --emerald-900: #0e3b2e;
+    --gold-500: #b88a3e;
+    --border: #d9cfb5;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-paper text-ink font-serif;
+    line-height: 1.55;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle at 10% 0%, rgba(36, 107, 84, 0.04) 0%, transparent 40%),
+      radial-gradient(circle at 90% 100%, rgba(184, 138, 62, 0.05) 0%, transparent 40%);
+  }
+}
+
+@layer components {
+  /* Diagonal "archive" texture overlay used on emerald panels */
+  .texture-diagonal {
+    background-image: repeating-linear-gradient(
+      45deg,
+      transparent 0 40px,
+      rgba(184, 138, 62, 0.04) 40px 41px
+    );
+  }
+
+  /* School crest medallion */
+  .crest {
+    @apply flex items-center justify-center rounded-full bg-emerald-900 font-display font-bold text-gold-400;
+    box-shadow: inset 0 0 0 3px var(--cream, #f5efe1),
+      inset 0 0 0 4px var(--gold-500);
+  }
+
+  /* Buttons — small-caps Inter, sharp 2px radius */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-sm font-sans text-[13px] font-medium uppercase tracking-[0.06em] transition-all;
+    padding: 12px 22px;
+  }
+  .btn-primary {
+    @apply bg-emerald-900 text-cream hover:bg-emerald-800;
+  }
+  .btn-gold {
+    @apply bg-gold-500 text-emerald-900 hover:bg-gold-400;
+  }
+  .btn-outline {
+    @apply border border-border bg-transparent text-ink hover:border-emerald-700 hover:text-emerald-900;
+  }
+
+  /* Form fields */
+  .field-label {
+    @apply mb-2 block font-sans text-[11px] font-medium uppercase tracking-[0.14em] text-ink-soft;
+  }
+  .field-input {
+    @apply w-full rounded-sm border border-border bg-paper px-3.5 py-3 font-serif text-[15px] text-ink transition-all;
+    @apply focus:border-emerald-700 focus:outline-none;
+  }
+  .field-input:focus {
+    box-shadow: 0 0 0 3px rgba(36, 107, 84, 0.12);
+  }
+}
