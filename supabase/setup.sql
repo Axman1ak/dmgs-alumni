@@ -1,11 +1,11 @@
 -- ============================================================================
 -- DMGS Alumni Platform — ONE-SHOT SETUP SQL
 -- Paste this entire file into the Supabase SQL Editor and click RUN.
--- It applies: schema -> functions/triggers -> RLS -> seed data.
+-- Applies: schema -> functions/triggers -> RLS -> guard fix -> seed data.
 -- Safe to run once on a fresh project.
 -- ============================================================================
 
--- ##### 1/4 SCHEMA #####
+-- ##### 1/5 SCHEMA #####
 -- ============================================================================
 -- DMGS Alumni Platform — 0001 schema
 -- Tables, enums, indexes. RLS is enabled in 0003; helper functions in 0002.
@@ -166,7 +166,7 @@ create table public.messages (
 
 create index messages_chat_created_idx on public.messages (chat_id, created_at);
 
--- ##### 2/4 FUNCTIONS & TRIGGERS #####
+-- ##### 2/5 FUNCTIONS & TRIGGERS #####
 -- ============================================================================
 -- DMGS Alumni Platform — 0002 functions & triggers
 -- SECURITY DEFINER helpers (bypass RLS, so they never cause policy recursion),
@@ -314,7 +314,7 @@ insert into storage.buckets (id, name, public)
 values ('avatars', 'avatars', true)
 on conflict (id) do nothing;
 
--- ##### 3/4 ROW LEVEL SECURITY #####
+-- ##### 3/5 ROW LEVEL SECURITY #####
 -- ============================================================================
 -- DMGS Alumni Platform — 0003 Row Level Security
 -- The heart of the access model. Three roles:
@@ -594,7 +594,50 @@ create policy avatars_delete_own on storage.objects
     and ((storage.foldername(name))[1] = auth.uid()::text or public.is_super_admin())
   );
 
--- ##### 4/4 SEED (classes 1955-1990) #####
+-- ##### 4/5 GUARD BOOTSTRAP FIX #####
+-- ============================================================================
+-- 0004 — fix the column guards so they don't trap the super-admin bootstrap.
+--
+-- The original guards reset privileged columns whenever the actor was "not a
+-- super admin". But direct SQL (SQL editor), the service-role key, and backend
+-- jobs have no auth.uid(), so is_super_admin() is false there too — which meant
+-- the FIRST super admin could never be promoted, and service-role admin
+-- approvals / bulk imports were silently reverted.
+--
+-- Fix: only pin privileged columns for an ACTUAL logged-in non-super-admin
+-- (auth.uid() is not null). Null-uid contexts are already privileged and
+-- bypass RLS, so trusting them is correct.
+-- ============================================================================
+
+create or replace function public.guard_profile_update()
+returns trigger
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if auth.uid() is not null and not public.is_super_admin() then
+    new.role          := old.role;
+    new.status        := old.status;
+    new.admin_of_year := old.admin_of_year;
+    new.approved_at   := old.approved_at;
+    new.approved_by   := old.approved_by;
+  end if;
+  return new;
+end;
+$$;
+
+create or replace function public.guard_alumni_year()
+returns trigger
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if auth.uid() is not null and not public.is_super_admin() then
+    new.class_year := old.class_year;
+  end if;
+  return new;
+end;
+$$;
+
+-- ##### 5/5 SEED (classes 1955-1990) #####
 -- ============================================================================
 -- Seed data. Runs on `supabase db reset`. Safe to run repeatedly.
 -- ============================================================================
