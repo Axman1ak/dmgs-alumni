@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GiveForm } from "@/components/donations/GiveForm";
 import { SupportedProjects } from "@/components/donations/SupportedProjects";
 import { createClient } from "@/lib/supabase/server";
+import { mapProject } from "@/lib/projects";
 import { ngn, shortDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -51,6 +52,14 @@ export default async function DonationsPage() {
     .eq("profile_id", user.id)
     .maybeSingle();
   const myYear = myAlum?.class_year ?? profile?.class_year ?? null;
+
+  const { data: projRows } = await supabase
+    .from("projects")
+    .select("*")
+    .order("sort_order");
+  const projects = (projRows ?? [])
+    .filter((p) => p.is_published || isSuper)
+    .map(mapProject);
 
   const { data: classes } = await supabase
     .from("classes")
@@ -121,7 +130,7 @@ export default async function DonationsPage() {
 
         <div className="mx-auto max-w-[1200px] px-8 py-14">
           {/* What gifts fund */}
-          <SupportedProjects />
+          <SupportedProjects projects={projects} canManage={isSuper} />
 
           {/* Fundraising by class — everyone sees aggregate; own class highlighted */}
           {classCards.length > 0 && (
@@ -207,6 +216,9 @@ export default async function DonationsPage() {
               <DonationTable rows={rows} showClass={isSuper} />
             </section>
             <aside>
+              <h2 className="mb-5 font-display text-[26px] font-medium text-emerald-900">
+                Make a gift
+              </h2>
               <GiveForm
                 me={user.id}
                 userEmail={user.email ?? ""}

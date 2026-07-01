@@ -109,9 +109,6 @@ export function GiveForm({
 
   return (
     <div className="border border-border bg-cream p-8">
-      <h3 className="mb-1 font-display text-[28px] font-semibold text-emerald-900">
-        Make a gift
-      </h3>
       <p className="mb-6 font-sans text-[13px] text-ink-muted">
         {donorClassLabel
           ? `Credited to ${donorClassLabel}.`

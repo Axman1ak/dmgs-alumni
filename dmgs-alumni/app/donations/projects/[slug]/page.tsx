@@ -5,16 +5,28 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ProjectArt } from "@/components/donations/ProjectArt";
 import { BudgetBreakdown } from "@/components/donations/BudgetBreakdown";
 import { Reveal } from "@/components/donations/Reveal";
-import { getProject, PROJECTS } from "@/lib/projects";
+import { mapProject } from "@/lib/projects";
+import { createClient } from "@/lib/supabase/server";
 import { ngn } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
-export default function ProjectPage({ params }: { params: { slug: string } }) {
-  const project = getProject(params.slug);
-  if (!project) notFound();
+export default async function ProjectPage({ params }: { params: { slug: string } }) {
+  const supabase = createClient();
+  const { data: row } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("slug", params.slug)
+    .maybeSingle();
+  if (!row) notFound();
+  const project = mapProject(row);
 
-  const others = PROJECTS.filter((p) => p.slug !== project.slug);
+  const { data: otherRows } = await supabase
+    .from("projects")
+    .select("*")
+    .neq("slug", params.slug)
+    .order("sort_order");
+  const others = (otherRows ?? []).map(mapProject);
 
   return (
     <>
