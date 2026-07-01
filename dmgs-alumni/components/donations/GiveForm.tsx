@@ -26,17 +26,16 @@ function loadPaystack(): Promise<void> {
 export function GiveForm({
   me,
   userEmail,
-  classes,
-  defaultYear,
+  donorYear,
+  donorClassLabel,
 }: {
   me: string;
   userEmail: string;
-  classes: { year: number; label: string }[];
-  defaultYear: number | null;
+  donorYear: number | null;
+  donorClassLabel: string | null;
 }) {
   const [amount, setAmount] = useState<number>(25000);
   const [custom, setCustom] = useState("");
-  const [year, setYear] = useState<string>(defaultYear ? String(defaultYear) : "");
   const [anonymous, setAnonymous] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -59,7 +58,7 @@ export function GiveForm({
     const { error } = await supabase.from("donations").insert({
       donor_profile_id: me,
       donor_name: anonymous ? "Anonymous" : null,
-      class_year: year ? Number(year) : null,
+      class_year: donorYear,
       amount: effectiveAmount,
       currency: "NGN",
       is_anonymous: anonymous,
@@ -81,14 +80,12 @@ export function GiveForm({
         amount: Math.round(effectiveAmount * 100), // kobo
         currency: "NGN",
         ref: reference,
-        metadata: { class_year: year, donor: me },
+        metadata: { class_year: donorYear, donor: me },
         callback: () => {
           setStatus("success");
           setMessage("Thank you for your gift! Your payment is being confirmed.");
         },
-        onClose: () => {
-          setBusy(false);
-        },
+        onClose: () => setBusy(false),
       });
       handler.openIframe();
     } catch (e) {
@@ -113,16 +110,18 @@ export function GiveForm({
   return (
     <div className="border border-border bg-cream p-8">
       <h3 className="mb-1 font-display text-[28px] font-semibold text-emerald-900">
-        Support the school
+        Make a gift
       </h3>
       <p className="mb-6 font-sans text-[13px] text-ink-muted">
-        Your gift funds class projects and the school&rsquo;s future.
+        {donorClassLabel
+          ? `Credited to ${donorClassLabel}.`
+          : "Credited to your graduating class."}
       </p>
 
       {!configured && (
         <div className="mb-6 rounded-sm border-l-[3px] border-gold-500 bg-gold-500/10 px-4 py-3 text-[13px] text-ink-soft">
-          Online giving will open as soon as the association&rsquo;s Paystack
-          account is approved. The form below is ready and waiting.
+          Online giving opens as soon as the association&rsquo;s Paystack account
+          is approved. The form is ready and waiting.
         </div>
       )}
 
@@ -157,21 +156,6 @@ export function GiveForm({
           placeholder="e.g. 50000"
           className="field-input"
         />
-      </div>
-
-      <div className="mb-5">
-        <label className="field-label" htmlFor="year">Support a class (optional)</label>
-        <select
-          id="year"
-          value={year}
-          onChange={(e) => setYear(e.target.value)}
-          className="field-input"
-        >
-          <option value="">General fund</option>
-          {classes.map((c) => (
-            <option key={c.year} value={c.year}>{c.label}</option>
-          ))}
-        </select>
       </div>
 
       <label className="mb-6 flex items-center gap-2.5 font-sans text-[13px] text-ink-soft">

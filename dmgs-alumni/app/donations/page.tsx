@@ -42,9 +42,8 @@ export default async function DonationsPage() {
   const role = profile?.role ?? "member";
   const isSuper = role === "super_admin";
   const isClassAdmin = role === "class_admin";
-  const adminYear = profile?.admin_of_year ?? null;
+  const isAdmin = isSuper || isClassAdmin;
 
-  // Default class for the give form: the donor's own claimed record / profile.
   const { data: myAlum } = await supabase
     .from("alumni")
     .select("class_year")
@@ -54,17 +53,16 @@ export default async function DonationsPage() {
 
   const { data: classes } = await supabase
     .from("classes")
-    .select("year, label, donation_goal")
-    .order("year", { ascending: false });
+    .select("year, label, donation_goal");
+  const classMap = new Map((classes ?? []).map((c) => [c.year, c]));
+  const myClassLabel = myYear ? classMap.get(myYear)?.label ?? null : null;
 
-  // Aggregate per-class totals (admins only — RPC enforces this too).
   let totals: Totals[] = [];
-  if (isSuper || isClassAdmin) {
+  if (isAdmin) {
     const { data } = await supabase.rpc("class_donation_totals");
     totals = (data ?? []) as Totals[];
   }
 
-  // Detail rows visible to the caller (RLS decides what returns).
   const { data: donations } = await supabase
     .from("donations")
     .select("id, donor_name, is_anonymous, class_year, amount, status, created_at")
@@ -73,9 +71,10 @@ export default async function DonationsPage() {
     .limit(200);
   const rows = (donations ?? []) as Donation[];
 
-  const withGoals = totals
+  const classCards = totals
     .map((t) => ({
-      ...t,
+      year: t.class_year,
+      label: t.label,
       total: Number(t.total_amount),
       goal: Number(t.goal),
       donors: Number(t.donor_count),
@@ -83,12 +82,25 @@ export default async function DonationsPage() {
     .filter((t) => t.goal > 0 || t.total > 0)
     .sort((a, b) => b.total - a.total);
 
+  const grandTotal = isAdmin
+    ? classCards.reduce((s, c) => s + c.total, 0)
+    : rows.reduce((s, d) => s + Number(d.amount), 0);
+  const totalGifts = isAdmin
+    ? classCards.reduce((s, c) => s + c.donors, 0)
+    : rows.length;
+
+  // Member's own class figures.
+  const myClassGoal = myYear ? Number(classMap.get(myYear)?.donation_goal ?? 0) : 0;
+  const myClassRows = rows.filter((d) => d.class_year === myYear);
+  const myClassRaised = myClassRows.reduce((s, d) => s + Number(d.amount), 0);
+  const myClassPct = myClassGoal > 0 ? Math.min(100, (myClassRaised / myClassGoal) * 100) : 0;
+
   return (
     <>
       <SiteHeader />
       <main>
         <section className="texture-diagonal bg-emerald-900 px-8 pb-12 pt-16 text-cream">
-          <div className="mx-auto max-w-[1280px]">
+          <div className="mx-auto max-w-[1200px]">
             <p className="mb-3 font-sans text-[11px] uppercase tracking-[0.24em] text-gold-400">
               Give back
             </p>
@@ -100,120 +112,193 @@ export default async function DonationsPage() {
           </div>
         </section>
 
-        <div className="mx-auto grid max-w-[1280px] gap-10 px-8 py-12 lg:grid-cols-[380px_1fr]">
-          {/* Give form */}
-          <div>
-            <GiveForm
-              me={user.id}
-              userEmail={user.email ?? ""}
-              classes={(classes ?? []).map((c) => ({ year: c.year, label: c.label }))}
-              defaultYear={myYear}
-            />
-          </div>
+        <div className="mx-auto max-w-[1200px] px-8 py-12">
+          {isAdmin ? (
+            <>
+              {/* Stat band */}
+              <div className="mb-10 grid grid-cols-2 gap-4 sm:grid-cols-3">
+                <Stat label={isSuper ? "Raised, all classes" : "Raised, your class"} value={ngn(grandTotal)} />
+                <Stat label="Total gifts" value={String(totalGifts)} />
+                <Stat label="Classes giving" value={String(classCards.filter((c) => c.total > 0).length)} />
+              </div>
 
-          {/* Right column */}
-          <div>
-            {(isSuper || isClassAdmin) && withGoals.length > 0 && (
-              <section className="mb-12">
-                <h2 className="mb-5 border-b border-border pb-3 font-display text-[26px] font-medium text-emerald-900">
-                  Class fundraising
-                </h2>
-                <div className="space-y-5">
-                  {withGoals.map((t) => {
-                    const pct = t.goal > 0 ? Math.min(100, (t.total / t.goal) * 100) : 0;
-                    const canSeeDetail = isSuper || t.class_year === adminYear;
-                    return (
-                      <div key={t.class_year}>
-                        <div className="mb-1.5 flex items-baseline justify-between">
-                          <span className="font-display text-[18px] font-semibold text-emerald-900">
-                            {t.label}
-                          </span>
-                          <span className="font-sans text-[13px] text-ink-muted">
-                            {ngn(t.total)}
-                            {t.goal > 0 && ` of ${ngn(t.goal)}`} · {t.donors}{" "}
-                            {t.donors === 1 ? "donor" : "donors"}
-                          </span>
+              {/* Class fundraising grid */}
+              {classCards.length > 0 && (
+                <section className="mb-12">
+                  <h2 className="mb-5 font-display text-[26px] font-medium text-emerald-900">
+                    Fundraising by class
+                  </h2>
+                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    {classCards.map((c) => {
+                      const pct = c.goal > 0 ? Math.min(100, (c.total / c.goal) * 100) : 0;
+                      const canDetail = isSuper || c.year === profile?.admin_of_year;
+                      return (
+                        <div key={c.year} className="border border-border bg-cream p-5">
+                          <div className="mb-2 flex items-baseline justify-between">
+                            <span className="font-display text-[20px] font-semibold text-emerald-900">
+                              {c.label}
+                            </span>
+                            <span className="font-sans text-[11px] uppercase tracking-[0.08em] text-ink-muted">
+                              {c.donors} {c.donors === 1 ? "gift" : "gifts"}
+                            </span>
+                          </div>
+                          <div className="mb-2 h-2.5 overflow-hidden rounded-full bg-cream-dark">
+                            <div className="h-full rounded-full bg-gold-500" style={{ width: `${pct}%` }} />
+                          </div>
+                          <p className="font-sans text-[13px] text-ink-soft">
+                            <span className="font-semibold text-emerald-900">{ngn(c.total)}</span>
+                            {c.goal > 0 && <span className="text-ink-muted"> of {ngn(c.goal)}</span>}
+                          </p>
+                          {canDetail && (
+                            <Link
+                              href={`/donations/report/${c.year}`}
+                              className="mt-2 inline-block font-sans text-[12px] text-emerald-700 hover:underline"
+                            >
+                              View / print report →
+                            </Link>
+                          )}
                         </div>
-                        <div className="h-2.5 overflow-hidden rounded-full bg-cream-dark">
-                          <div
-                            className="h-full rounded-full bg-gold-500"
-                            style={{ width: `${t.goal > 0 ? pct : 0}%` }}
-                          />
-                        </div>
-                        {canSeeDetail && (
-                          <Link
-                            href={`/donations/report/${t.class_year}`}
-                            className="mt-1.5 inline-block font-sans text-[12px] text-emerald-700 hover:underline"
-                          >
-                            View class report →
-                          </Link>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                {isClassAdmin && (
-                  <p className="mt-4 font-sans text-[12px] text-ink-muted">
-                    You see individual donations only for your class ({adminYear}).
-                    Other classes show aggregate totals only.
-                  </p>
-                )}
-              </section>
-            )}
-
-            {/* Detail table */}
-            <section>
-              <h2 className="mb-5 border-b border-border pb-3 font-display text-[26px] font-medium text-emerald-900">
-                {isSuper
-                  ? "All donations"
-                  : isClassAdmin
-                    ? `Donations — Class of ${adminYear}`
-                    : "Your giving"}
-              </h2>
-
-              {rows.length === 0 ? (
-                <p className="py-10 text-center font-sans text-[14px] text-ink-muted">
-                  {isSuper || isClassAdmin
-                    ? "No donations recorded yet."
-                    : "You haven't made a donation yet. Your gifts will appear here."}
-                </p>
-              ) : (
-                <div className="overflow-hidden rounded-[2px] border border-border">
-                  <table className="w-full border-collapse bg-cream text-left">
-                    <thead>
-                      <tr className="bg-emerald-900 text-cream">
-                        <th className="px-4 py-3 font-sans text-[11px] uppercase tracking-[0.1em]">Donor</th>
-                        <th className="px-4 py-3 font-sans text-[11px] uppercase tracking-[0.1em]">Class</th>
-                        <th className="px-4 py-3 text-right font-sans text-[11px] uppercase tracking-[0.1em]">Amount</th>
-                        <th className="px-4 py-3 font-sans text-[11px] uppercase tracking-[0.1em]">Date</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map((d) => (
-                        <tr key={d.id} className="border-b border-border last:border-b-0">
-                          <td className="px-4 py-3 text-[14px] text-ink">
-                            {d.is_anonymous ? "Anonymous" : d.donor_name ?? "—"}
-                          </td>
-                          <td className="px-4 py-3 text-[14px] text-ink-soft">
-                            {d.class_year ?? "General"}
-                          </td>
-                          <td className="px-4 py-3 text-right text-[14px] font-semibold text-emerald-900">
-                            {ngn(d.amount)}
-                          </td>
-                          <td className="px-4 py-3 text-[13px] text-ink-muted">
-                            {shortDate(d.created_at)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      );
+                    })}
+                  </div>
+                  {isClassAdmin && (
+                    <p className="mt-4 font-sans text-[12px] text-ink-muted">
+                      You see individual donors only for your class. Other classes
+                      show totals only.
+                    </p>
+                  )}
+                </section>
               )}
-            </section>
-          </div>
+
+              {/* Recent donations + give card */}
+              <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
+                <section>
+                  <h2 className="mb-5 font-display text-[26px] font-medium text-emerald-900">
+                    {isSuper ? "Recent donations" : `Class of ${profile?.admin_of_year} donations`}
+                  </h2>
+                  <DonationTable rows={rows} showClass={isSuper} />
+                </section>
+                <aside className="lg:pt-1">
+                  <GiveForm
+                    me={user.id}
+                    userEmail={user.email ?? ""}
+                    donorYear={myYear}
+                    donorClassLabel={myClassLabel}
+                  />
+                </aside>
+              </div>
+            </>
+          ) : (
+            /* Member view */
+            <div className="grid gap-10 lg:grid-cols-[360px_1fr]">
+              <div>
+                <GiveForm
+                  me={user.id}
+                  userEmail={user.email ?? ""}
+                  donorYear={myYear}
+                  donorClassLabel={myClassLabel}
+                />
+              </div>
+              <div>
+                {myYear ? (
+                  <>
+                    <section className="mb-10">
+                      <h2 className="mb-4 font-display text-[26px] font-medium text-emerald-900">
+                        {myClassLabel ?? `Class of ${myYear}`}
+                      </h2>
+                      <div className="border border-border bg-cream p-6">
+                        <div className="mb-2 h-3 overflow-hidden rounded-full bg-cream-dark">
+                          <div className="h-full rounded-full bg-gold-500" style={{ width: `${myClassPct}%` }} />
+                        </div>
+                        <p className="font-sans text-[14px] text-ink-soft">
+                          <span className="font-semibold text-emerald-900">{ngn(myClassRaised)}</span>
+                          {myClassGoal > 0 && <span className="text-ink-muted"> of {ngn(myClassGoal)} goal</span>}
+                          {" · "}
+                          {myClassRows.length} {myClassRows.length === 1 ? "gift" : "gifts"}
+                        </p>
+                      </div>
+                    </section>
+                    <section>
+                      <h2 className="mb-4 font-display text-[26px] font-medium text-emerald-900">
+                        Your class&rsquo;s donations
+                      </h2>
+                      <DonationTable rows={myClassRows} showClass={false} />
+                    </section>
+                  </>
+                ) : (
+                  <div className="border border-border bg-cream p-8 text-center">
+                    <h3 className="mb-2 font-display text-[22px] text-emerald-900">
+                      Set your graduating year
+                    </h3>
+                    <p className="text-[14px] text-ink-soft">
+                      Claim your directory listing so we can show your class&rsquo;s giving.
+                    </p>
+                    <Link href="/account" className="btn btn-outline mt-5">
+                      Go to my profile
+                    </Link>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </main>
       <SiteFooter />
     </>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border border-border bg-cream p-5">
+      <div className="font-display text-[30px] font-semibold text-emerald-900">{value}</div>
+      <div className="mt-1 font-sans text-[11px] uppercase tracking-[0.12em] text-ink-muted">
+        {label}
+      </div>
+    </div>
+  );
+}
+
+function DonationTable({ rows, showClass }: { rows: Donation[]; showClass: boolean }) {
+  if (rows.length === 0) {
+    return (
+      <p className="border border-border bg-cream px-4 py-10 text-center font-sans text-[14px] text-ink-muted">
+        No donations recorded yet.
+      </p>
+    );
+  }
+  return (
+    <div className="overflow-hidden rounded-[2px] border border-border">
+      <table className="w-full border-collapse bg-cream text-left">
+        <thead>
+          <tr className="bg-emerald-900 text-cream">
+            <th className="px-4 py-3 font-sans text-[11px] uppercase tracking-[0.1em]">Donor</th>
+            {showClass && (
+              <th className="px-4 py-3 font-sans text-[11px] uppercase tracking-[0.1em]">Class</th>
+            )}
+            <th className="px-4 py-3 text-right font-sans text-[11px] uppercase tracking-[0.1em]">Amount</th>
+            <th className="px-4 py-3 text-right font-sans text-[11px] uppercase tracking-[0.1em]">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((d) => (
+            <tr key={d.id} className="border-b border-border last:border-b-0 hover:bg-cream-dark">
+              <td className="px-4 py-3 text-[14px] text-ink">
+                {d.is_anonymous ? "Anonymous" : d.donor_name ?? "—"}
+              </td>
+              {showClass && (
+                <td className="px-4 py-3 text-[14px] text-ink-soft">{d.class_year ?? "—"}</td>
+              )}
+              <td className="px-4 py-3 text-right text-[14px] font-semibold text-emerald-900">
+                {ngn(Number(d.amount))}
+              </td>
+              <td className="px-4 py-3 text-right text-[13px] text-ink-muted">
+                {shortDate(d.created_at)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
