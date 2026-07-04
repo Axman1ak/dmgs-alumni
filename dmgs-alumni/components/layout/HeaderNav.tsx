@@ -16,10 +16,12 @@ export function HeaderNav({
   signedIn,
   initials,
   isSuperAdmin = false,
+  pendingCount = 0,
 }: {
   signedIn: boolean;
   initials: string;
   isSuperAdmin?: boolean;
+  pendingCount?: number;
 }) {
   const pathname = usePathname();
   const navItems = isSuperAdmin
@@ -65,11 +67,16 @@ export function HeaderNav({
           <Link
             key={item.href}
             href={item.href}
-            className={`rounded px-4 py-2.5 font-sans text-[13px] font-medium uppercase tracking-[0.04em] transition-colors ${
+            className={`relative rounded px-4 py-2.5 font-sans text-[13px] font-medium uppercase tracking-[0.04em] transition-colors ${
               active(item.href) ? "text-emerald-900" : "text-ink-soft hover:text-emerald-900"
             }`}
           >
             {item.label}
+            {item.href === "/admin" && pendingCount > 0 && (
+              <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold text-cream">
+                {pendingCount}
+              </span>
+            )}
           </Link>
         ))}
 
@@ -131,6 +138,11 @@ export function HeaderNav({
                 }`}
               >
                 {item.label}
+                {item.href === "/admin" && pendingCount > 0 && (
+                  <span className="ml-2 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold text-cream">
+                    {pendingCount}
+                  </span>
+                )}
               </Link>
             ))}
             <Link href="/account" className="border-b border-border/60 py-3.5 font-sans text-[14px] uppercase tracking-[0.04em] text-ink-soft">

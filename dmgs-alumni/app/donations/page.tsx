@@ -37,7 +37,7 @@ export default async function DonationsPage() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, class_year, admin_of_year")
+    .select("role, class_year, admin_of_year, full_name")
     .eq("id", user.id)
     .single();
 
@@ -222,6 +222,7 @@ export default async function DonationsPage() {
               <GiveForm
                 me={user.id}
                 userEmail={user.email ?? ""}
+                donorName={profile?.full_name ?? ""}
                 donorYear={myYear}
                 donorClassLabel={myClassLabel}
               />

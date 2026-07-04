@@ -26,11 +26,13 @@ function loadPaystack(): Promise<void> {
 export function GiveForm({
   me,
   userEmail,
+  donorName,
   donorYear,
   donorClassLabel,
 }: {
   me: string;
   userEmail: string;
+  donorName: string;
   donorYear: number | null;
   donorClassLabel: string | null;
 }) {
@@ -57,7 +59,7 @@ export function GiveForm({
 
     const { error } = await supabase.from("donations").insert({
       donor_profile_id: me,
-      donor_name: anonymous ? "Anonymous" : null,
+      donor_name: anonymous ? "Anonymous" : donorName || null,
       class_year: donorYear,
       amount: effectiveAmount,
       currency: "NGN",

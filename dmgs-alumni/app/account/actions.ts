@@ -82,26 +82,6 @@ export async function createMyListing(
   return { message: "Listing created." };
 }
 
-/** Claim an existing unclaimed listing via the SECURITY DEFINER RPC. */
-export async function claimListing(
-  _prev: FormState,
-  formData: FormData,
-): Promise<FormState> {
-  const { supabase } = await requireUser();
-  const alumniId = clean(formData.get("alumni_id"));
-  if (!alumniId) return { error: "No listing selected." };
-
-  const { error } = await supabase.rpc("claim_alumni", {
-    p_alumni_id: alumniId,
-  });
-
-  if (error) return { error: error.message };
-
-  revalidatePath("/account");
-  revalidatePath("/directory");
-  return { message: "Listing claimed." };
-}
-
 /** Persist a new photo URL after the client uploads to Storage. */
 export async function savePhotoUrl(url: string): Promise<FormState> {
   const { supabase, user } = await requireUser();

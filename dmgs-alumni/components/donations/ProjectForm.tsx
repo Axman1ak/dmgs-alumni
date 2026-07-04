@@ -62,7 +62,7 @@ export function ProjectForm({ project }: { project?: Project }) {
       </div>
 
       <label className="mt-5 flex items-center gap-2.5 font-sans text-[13px] text-ink-soft">
-        <input type="checkbox" name="is_published" defaultChecked={project ? true : true} />
+        <input type="checkbox" name="is_published" defaultChecked={project ? project.isPublished : true} />
         Published (visible to members)
       </label>
 

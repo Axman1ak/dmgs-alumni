@@ -13,6 +13,7 @@ export type Project = {
   photo: string | null;
   goal: number;
   impact: string | null;
+  isPublished: boolean;
 };
 
 /** Normalise a raw `projects` row (jsonb columns) into a typed Project. */
@@ -42,6 +43,7 @@ export function mapProject(row: any): Project {
     photo: row.photo_url ?? null,
     goal: Number(row.goal ?? 0),
     impact: row.impact ?? null,
+    isPublished: row.is_published ?? true,
   };
 }
 

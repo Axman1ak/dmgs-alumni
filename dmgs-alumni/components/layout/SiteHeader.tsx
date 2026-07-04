@@ -15,6 +15,7 @@ export async function SiteHeader() {
 
   let initials = "";
   let isSuperAdmin = false;
+  let pendingCount = 0;
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
@@ -22,6 +23,13 @@ export async function SiteHeader() {
       .eq("id", user.id)
       .single();
     isSuperAdmin = profile?.role === "super_admin";
+    if (isSuperAdmin) {
+      const { count } = await supabase
+        .from("profiles")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+      pendingCount = count ?? 0;
+    }
     const name = profile?.full_name ?? user.email ?? "";
     initials = name
       .split(" ")
@@ -57,7 +65,12 @@ export async function SiteHeader() {
             </span>
           </Link>
 
-          <HeaderNav signedIn={Boolean(user)} initials={initials} isSuperAdmin={isSuperAdmin} />
+          <HeaderNav
+            signedIn={Boolean(user)}
+            initials={initials}
+            isSuperAdmin={isSuperAdmin}
+            pendingCount={pendingCount}
+          />
         </div>
       </header>
     </>
