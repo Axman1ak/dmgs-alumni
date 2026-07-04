@@ -24,7 +24,7 @@ export default async function AdminPage() {
 
   const { data: pending } = await supabase
     .from("profiles")
-    .select("id, full_name, email, created_at")
+    .select("id, full_name, email, occupation, country, verification_answer, created_at")
     .eq("status", "pending")
     .order("created_at", { ascending: true });
 
@@ -81,12 +81,19 @@ export default async function AdminPage() {
                     key={p.id}
                     className="flex flex-wrap items-center justify-between gap-3 border border-border border-l-4 border-l-gold-500 bg-cream px-6 py-4"
                   >
-                    <div>
+                    <div className="min-w-0 flex-1">
                       <p className="font-display text-[20px] font-semibold text-emerald-900">
                         {p.full_name}
                       </p>
                       <p className="font-sans text-[13px] text-ink-soft">{p.email}</p>
-                      <p className="font-sans text-[11px] text-ink-muted">
+                      <p className="font-sans text-[12px] text-ink-soft">
+                        {[p.occupation, p.country].filter(Boolean).join(" · ") || "No profession/country given"}
+                      </p>
+                      <p className="mt-1.5 rounded-sm border-l-2 border-gold-500 bg-gold-500/10 px-2.5 py-1.5 font-sans text-[12px] text-ink-soft">
+                        <span className="font-semibold text-emerald-900">Identity check:</span>{" "}
+                        {p.verification_answer || "— (not answered)"}
+                      </p>
+                      <p className="mt-1 font-sans text-[11px] text-ink-muted">
                         Requested {shortDate(p.created_at)}
                       </p>
                     </div>

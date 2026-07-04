@@ -44,6 +44,28 @@ export default function SignupPage() {
               </label>
               <input id="password" name="password" type="password" autoComplete="new-password" minLength={8} required className="field-input" />
             </div>
+            <div className="mb-5">
+              <label htmlFor="occupation" className="field-label">
+                Profession
+              </label>
+              <input id="occupation" name="occupation" type="text" autoComplete="organization-title" className="field-input" />
+            </div>
+            <div className="mb-5">
+              <label htmlFor="country" className="field-label">
+                Country
+              </label>
+              <input id="country" name="country" type="text" autoComplete="country-name" required className="field-input" />
+            </div>
+            <div className="mb-5">
+              <label htmlFor="verification_answer" className="field-label">
+                Identity check
+              </label>
+              <p className="mb-2 font-sans text-[12px] leading-relaxed text-ink-muted">
+                To confirm you&rsquo;re a true old student: who was the senior prefect
+                (head boy or head girl) in your final year at Doherty?
+              </p>
+              <input id="verification_answer" name="verification_answer" type="text" required className="field-input" />
+            </div>
             <SubmitButton>Submit request</SubmitButton>
           </form>
         </>
