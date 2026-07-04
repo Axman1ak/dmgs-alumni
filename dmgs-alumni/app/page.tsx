@@ -1,8 +1,26 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { createClient } from "@/lib/supabase/server";
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let approved = false;
+  if (user) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("status")
+      .eq("id", user.id)
+      .single();
+    approved = data?.status === "approved";
+  }
+
   return (
     <>
       <SiteHeader />
@@ -22,12 +40,29 @@ export default function HomePage() {
             States, Canada, the United Kingdom, and beyond.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
-            <Link href="/signup" className="btn btn-primary">
-              Request membership
-            </Link>
-            <Link href="/login" className="btn btn-outline">
-              Member sign in
-            </Link>
+            {approved ? (
+              <>
+                <Link href="/directory" className="btn btn-primary">
+                  Enter the directory
+                </Link>
+                <Link href="/events" className="btn btn-outline">
+                  See events
+                </Link>
+              </>
+            ) : user ? (
+              <Link href="/pending" className="btn btn-primary">
+                Your membership status
+              </Link>
+            ) : (
+              <>
+                <Link href="/signup" className="btn btn-primary">
+                  Request membership
+                </Link>
+                <Link href="/login" className="btn btn-outline">
+                  Member sign in
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Stats */}
