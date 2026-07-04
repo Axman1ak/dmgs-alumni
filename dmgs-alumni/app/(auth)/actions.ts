@@ -47,7 +47,7 @@ export async function signup(
   }
 
   const supabase = createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -57,6 +57,14 @@ export async function signup(
   });
 
   if (error) return { error: error.message };
+
+  // If email confirmation is disabled, sign-up returns a live session — the
+  // member is already signed in, so send them to the pending-approval page.
+  // Otherwise, tell them to confirm their email first.
+  if (data.session) {
+    revalidatePath("/", "layout");
+    redirect("/pending");
+  }
 
   return {
     message:
