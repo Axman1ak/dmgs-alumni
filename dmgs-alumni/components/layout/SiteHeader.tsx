@@ -14,12 +14,14 @@ export async function SiteHeader() {
   } = await supabase.auth.getUser();
 
   let initials = "";
+  let isSuperAdmin = false;
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("full_name")
+      .select("full_name, role")
       .eq("id", user.id)
       .single();
+    isSuperAdmin = profile?.role === "super_admin";
     const name = profile?.full_name ?? user.email ?? "";
     initials = name
       .split(" ")
@@ -55,7 +57,7 @@ export async function SiteHeader() {
             </span>
           </Link>
 
-          <HeaderNav signedIn={Boolean(user)} initials={initials} />
+          <HeaderNav signedIn={Boolean(user)} initials={initials} isSuperAdmin={isSuperAdmin} />
         </div>
       </header>
     </>

@@ -15,11 +15,16 @@ const NAV = [
 export function HeaderNav({
   signedIn,
   initials,
+  isSuperAdmin = false,
 }: {
   signedIn: boolean;
   initials: string;
+  isSuperAdmin?: boolean;
 }) {
   const pathname = usePathname();
+  const navItems = isSuperAdmin
+    ? [...NAV, { href: "/admin", label: "Admin" }]
+    : NAV;
   const [menuOpen, setMenuOpen] = useState(false); // user dropdown
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -56,7 +61,7 @@ export function HeaderNav({
     <>
       {/* Desktop nav */}
       <nav className="ml-auto hidden items-center gap-1 md:flex">
-        {NAV.map((item) => (
+        {navItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
@@ -117,7 +122,7 @@ export function HeaderNav({
       {mobileOpen && (
         <div className="absolute inset-x-0 top-full border-b border-border bg-cream shadow-lg md:hidden">
           <nav className="flex flex-col px-6 py-3">
-            {NAV.map((item) => (
+            {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}

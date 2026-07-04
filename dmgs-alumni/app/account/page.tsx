@@ -31,19 +31,6 @@ export default async function AccountPage() {
       .eq("id", user.id)
       .single()).data?.full_name ?? "";
 
-  // Unclaimed listings available to claim (only needed when they have none).
-  let unclaimed: Alumni[] = [];
-  if (!mine) {
-    const { data } = await supabase
-      .from("alumni")
-      .select(
-        "id, profile_id, full_name, class_year, occupation, city, country, phone, email, bio, photo_url, chapter, is_published",
-      )
-      .is("profile_id", null)
-      .order("full_name");
-    unclaimed = (data ?? []) as Alumni[];
-  }
-
   return (
     <>
       <SiteHeader />
@@ -58,7 +45,7 @@ export default async function AccountPage() {
         {mine ? (
           <ProfileEditForm person={mine as Alumni} />
         ) : (
-          <ClaimOrCreate unclaimed={unclaimed} defaultName={myName} />
+          <ClaimOrCreate defaultName={myName} />
         )}
       </main>
       <SiteFooter />
