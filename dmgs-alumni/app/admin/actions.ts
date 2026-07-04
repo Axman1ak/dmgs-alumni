@@ -44,7 +44,7 @@ export async function approveMember(formData: FormData) {
   if (!existing) {
     const { data: p } = await supabase
       .from("profiles")
-      .select("full_name, occupation, country, class_year")
+      .select("full_name, occupation, city, country, phone, bio, class_year")
       .eq("id", memberId)
       .single();
     if (p) {
@@ -52,7 +52,10 @@ export async function approveMember(formData: FormData) {
         profile_id: memberId,
         full_name: p.full_name,
         occupation: p.occupation,
+        city: p.city,
         country: p.country,
+        phone: p.phone,
+        bio: p.bio,
         class_year: p.class_year,
         chapter: "Member",
         is_published: true,

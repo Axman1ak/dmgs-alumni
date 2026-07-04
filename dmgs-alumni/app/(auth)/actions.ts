@@ -35,16 +35,21 @@ export async function signup(
   _prev: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
-  const fullName = String(formData.get("full_name") ?? "").trim();
+  const firstName = String(formData.get("first_name") ?? "").trim();
+  const lastName = String(formData.get("last_name") ?? "").trim();
+  const fullName = `${firstName} ${lastName}`.trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const occupation = String(formData.get("occupation") ?? "").trim();
-  const country = String(formData.get("country") ?? "").trim();
   const classYear = String(formData.get("class_year") ?? "").trim();
+  const city = String(formData.get("city") ?? "").trim();
+  const country = String(formData.get("country") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+  const bio = String(formData.get("bio") ?? "").trim();
   const verificationAnswer = String(formData.get("verification_answer") ?? "").trim();
 
-  if (!fullName || !email || !password || !country || !classYear || !verificationAnswer) {
-    return { error: "Please fill in every field, including your class year and the identity question." };
+  if (!firstName || !lastName || !email || !password || !country || !classYear || !verificationAnswer) {
+    return { error: "Please fill in your name, email, country, class year, and the identity question." };
   }
   if (password.length < 8) {
     return { error: "Password must be at least 8 characters." };
@@ -58,8 +63,11 @@ export async function signup(
       data: {
         full_name: fullName,
         occupation,
-        country,
         class_year: classYear,
+        city,
+        country,
+        phone,
+        bio,
         verification_answer: verificationAnswer,
       },
       emailRedirectTo: `${siteUrl()}/auth/callback`,
