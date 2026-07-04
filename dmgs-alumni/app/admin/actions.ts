@@ -26,11 +26,42 @@ function id(formData: FormData) {
 
 export async function approveMember(formData: FormData) {
   const { supabase, user } = await requireSuperAdmin();
+  const memberId = id(formData);
+
   await supabase
     .from("profiles")
     .update({ status: "approved", approved_at: new Date().toISOString(), approved_by: user.id })
-    .eq("id", id(formData));
+    .eq("id", memberId);
+
+  // Put the new member in the directory automatically, using the details they
+  // gave at sign-up. They can enrich it (bio, photo) from their profile page.
+  const { data: existing } = await supabase
+    .from("alumni")
+    .select("id")
+    .eq("profile_id", memberId)
+    .maybeSingle();
+
+  if (!existing) {
+    const { data: p } = await supabase
+      .from("profiles")
+      .select("full_name, occupation, country, class_year")
+      .eq("id", memberId)
+      .single();
+    if (p) {
+      await supabase.from("alumni").insert({
+        profile_id: memberId,
+        full_name: p.full_name,
+        occupation: p.occupation,
+        country: p.country,
+        class_year: p.class_year,
+        chapter: "Member",
+        is_published: true,
+      });
+    }
+  }
+
   revalidatePath("/admin");
+  revalidatePath("/directory");
 }
 
 export async function rejectMember(formData: FormData) {

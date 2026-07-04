@@ -40,10 +40,11 @@ export async function signup(
   const password = String(formData.get("password") ?? "");
   const occupation = String(formData.get("occupation") ?? "").trim();
   const country = String(formData.get("country") ?? "").trim();
+  const classYear = String(formData.get("class_year") ?? "").trim();
   const verificationAnswer = String(formData.get("verification_answer") ?? "").trim();
 
-  if (!fullName || !email || !password || !country || !verificationAnswer) {
-    return { error: "Please fill in every field, including the identity question." };
+  if (!fullName || !email || !password || !country || !classYear || !verificationAnswer) {
+    return { error: "Please fill in every field, including your class year and the identity question." };
   }
   if (password.length < 8) {
     return { error: "Password must be at least 8 characters." };
@@ -58,6 +59,7 @@ export async function signup(
         full_name: fullName,
         occupation,
         country,
+        class_year: classYear,
         verification_answer: verificationAnswer,
       },
       emailRedirectTo: `${siteUrl()}/auth/callback`,

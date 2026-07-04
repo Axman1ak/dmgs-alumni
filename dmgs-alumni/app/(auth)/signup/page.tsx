@@ -57,6 +57,21 @@ export default function SignupPage() {
               <input id="country" name="country" type="text" autoComplete="country-name" required className="field-input" />
             </div>
             <div className="mb-5">
+              <label htmlFor="class_year" className="field-label">
+                Graduating year
+              </label>
+              <select id="class_year" name="class_year" required defaultValue="" className="field-input">
+                <option value="" disabled>
+                  Select your year…
+                </option>
+                {Array.from({ length: 2020 - 1955 + 1 }, (_, i) => 2020 - i).map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-5">
               <label htmlFor="verification_answer" className="field-label">
                 Identity check
               </label>
