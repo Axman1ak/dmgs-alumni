@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GiveForm } from "@/components/donations/GiveForm";
-import { ProjectSpread } from "@/components/donations/ProjectSpread";
+import { SupportedProjects } from "@/components/donations/SupportedProjects";
 import { Reveal } from "@/components/donations/Reveal";
 import { createClient } from "@/lib/supabase/server";
 import { mapProject } from "@/lib/projects";
@@ -132,7 +132,9 @@ export default async function DonationsPage() {
         )}
 
         {/* ------------------------------------------------------------------
-            1 · Cinematic hero — the school itself, one promise, one button
+            1 · Compact hero band — one promise, the button, the total raised.
+            Deliberately short (a band, not a full-screen photo hero) so the
+            page reads as a focused ask rather than a landing page.
         ------------------------------------------------------------------ */}
         <section className="relative isolate overflow-hidden bg-emerald-900 text-cream">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -143,53 +145,43 @@ export default async function DonationsPage() {
           />
           <div
             aria-hidden
-            className="absolute inset-0 -z-10 bg-gradient-to-b from-emerald-900/70 via-emerald-900/55 to-emerald-900"
+            className="absolute inset-0 -z-10 bg-gradient-to-r from-emerald-900/92 via-emerald-900/78 to-emerald-900/60"
           />
           <div aria-hidden className="texture-diagonal absolute inset-0 -z-10" />
 
-          <div className="mx-auto flex min-h-[56vh] max-w-[1100px] flex-col justify-end px-8 pb-12 pt-28">
-            <div className="max-w-[760px] animate-fadeIn">
-              <p className="mb-4 font-sans text-[11px] uppercase tracking-[0.26em] text-gold-400">
+          <div className="mx-auto flex max-w-[1100px] flex-wrap items-end justify-between gap-x-10 gap-y-6 px-8 py-12">
+            <div className="max-w-[560px] animate-fadeIn">
+              <p className="mb-3 font-sans text-[11px] uppercase tracking-[0.26em] text-gold-400">
                 The giving campaign
               </p>
-              <h1 className="font-display text-[clamp(46px,7.5vw,86px)] font-medium leading-[0.98]">
+              <h1 className="font-display text-[clamp(34px,5vw,52px)] font-medium leading-[1.0]">
                 Build the school that built you.
               </h1>
-              <p className="mt-6 max-w-[540px] font-serif text-[18px] leading-relaxed text-cream/90">
-                A bursary that keeps a bright student in class. A laboratory
-                where they run the experiment instead of reading about it. Every
-                gift to Doherty becomes something real — and every naira is
-                accounted for.
+              <p className="mt-4 max-w-[480px] font-serif text-[16px] leading-relaxed text-cream/90">
+                Every gift to Doherty becomes something real — a bursary, a
+                laboratory, a library — and every naira is accounted for.
               </p>
-              <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-5">
-                <a href="#give" className="btn btn-gold px-10 py-5 text-[15px] shadow-lg">
-                  Make a gift
-                </a>
-                <a
-                  href="#causes"
-                  className="font-sans text-[13px] font-medium uppercase tracking-[0.14em] text-cream/90 transition-colors hover:text-gold-400"
-                >
-                  See what it builds ↓
-                </a>
-              </div>
+              <a href="#give" className="btn btn-gold mt-6 px-8 py-4 text-[15px] shadow-lg">
+                Make a gift
+              </a>
             </div>
 
-            {/* Social proof */}
-            <div className="mt-9 border-t border-cream/20 pt-6">
+            {/* Total raised */}
+            <div className="animate-fadeIn">
               {grandTotal > 0 ? (
-                <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                  <span className="font-display text-[clamp(28px,4vw,40px)] font-semibold leading-none text-gold-400">
+                <div className="sm:text-right">
+                  <div className="font-display text-[clamp(30px,4vw,44px)] font-semibold leading-none text-gold-400">
                     {ngn(grandTotal)}
-                  </span>
-                  <span className="font-sans text-[12px] uppercase tracking-[0.16em] text-cream/75">
+                  </div>
+                  <div className="mt-2 font-sans text-[11px] uppercase tracking-[0.16em] text-cream/75">
                     raised so far by {activeClasses}{" "}
                     {activeClasses === 1 ? "class" : "classes"}
-                  </span>
-                </p>
+                  </div>
+                </div>
               ) : (
-                <p className="font-sans text-[12px] uppercase tracking-[0.16em] text-cream/75">
-                  The campaign is just beginning — be among the first names in
-                  the book.
+                <p className="max-w-[220px] font-sans text-[12px] uppercase tracking-[0.16em] text-cream/75 sm:text-right">
+                  The campaign is just beginning — be among the first names in the
+                  book.
                 </p>
               )}
             </div>
@@ -197,33 +189,15 @@ export default async function DonationsPage() {
         </section>
 
         {/* ------------------------------------------------------------------
-            2 · Storytelling — each project as a full-width editorial spread
+            2 · Where your gift goes — a compact row of project cards. The full
+            story for each project lives on its own page ("Read the story").
         ------------------------------------------------------------------ */}
-        {projects.length > 0 && (
-          <section id="causes" className="scroll-mt-24 bg-paper px-8 py-16">
+        {(projects.length > 0 || isSuper) && (
+          <div id="causes" className="scroll-mt-24 bg-paper px-8 pt-14">
             <div className="mx-auto max-w-[1100px]">
-              <Reveal>
-                <div className="mb-10 max-w-[640px]">
-                  <p className="mb-3 font-sans text-[11px] uppercase tracking-[0.24em] text-gold-500">
-                    Current priorities
-                  </p>
-                  <h2 className="font-display text-[clamp(34px,4.5vw,52px)] font-medium leading-[1.04] text-emerald-900">
-                    Not a fund. A promise, kept in public.
-                  </h2>
-                  <p className="mt-4 font-serif text-[16px] leading-relaxed text-ink-soft">
-                    These are the projects the association is funding right now —
-                    each with an open budget, a clear goal, and a story you can
-                    read to the last line.
-                  </p>
-                </div>
-              </Reveal>
-              <div className="space-y-14">
-                {projects.map((p, i) => (
-                  <ProjectSpread key={p.slug} project={p} index={i} />
-                ))}
-              </div>
+              <SupportedProjects projects={projects} canManage={isSuper} />
             </div>
-          </section>
+          </div>
         )}
 
         {/* ------------------------------------------------------------------
