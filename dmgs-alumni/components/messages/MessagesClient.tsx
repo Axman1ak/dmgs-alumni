@@ -134,7 +134,7 @@ export function MessagesClient({
   }
 
   return (
-    <main className="mx-auto grid h-[calc(100vh-140px)] max-h-[820px] max-w-[1280px] grid-cols-1 overflow-hidden border border-border bg-cream md:my-6 md:grid-cols-[320px_1fr]">
+    <main className="mx-auto grid h-[calc(100vh-160px)] max-h-[820px] max-w-[1280px] grid-cols-1 overflow-hidden border border-border bg-cream md:mt-4 md:grid-cols-[320px_1fr]">
       {/* Sidebar */}
       <aside
         className={`flex flex-col border-r border-border bg-paper ${

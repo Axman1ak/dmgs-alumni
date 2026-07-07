@@ -102,33 +102,74 @@ export default async function DonationsPage() {
     <>
       <SiteHeader />
       <main>
-        {/* Hero with featured total */}
-        <section className="texture-diagonal bg-emerald-900 px-8 pb-14 pt-16 text-cream">
-          <div className="mx-auto flex max-w-[1200px] flex-wrap items-end justify-between gap-8">
+        {/* Hero */}
+        <section className="texture-diagonal bg-emerald-900 px-8 pb-16 pt-16 text-cream">
+          <div className="mx-auto grid max-w-[1100px] items-center gap-10 lg:grid-cols-[1.5fr_1fr]">
             <div>
               <p className="mb-3 font-sans text-[11px] uppercase tracking-[0.24em] text-gold-400">
                 Give back
               </p>
-              <h1 className="font-display text-[56px] font-medium leading-none">Giving</h1>
-              <p className="mt-3 max-w-[460px] font-serif text-[17px] italic opacity-85">
-                Every gift carries the Doherty name forward, from the labs to the
-                library to the students who come next.
+              <h1 className="font-display text-[clamp(42px,6vw,64px)] font-medium leading-[1.02]">
+                Build the school that built you.
+              </h1>
+              <p className="mt-4 max-w-[500px] font-serif text-[17px] leading-relaxed text-cream/85">
+                A bursary that keeps a bright student in class. A laboratory where
+                they run the experiment instead of reading it. Every gift to
+                Doherty becomes something real, and every naira is accounted for.
               </p>
+              <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4">
+                <a href="#give" className="btn btn-gold px-8 py-4">
+                  Make a gift
+                </a>
+                <a
+                  href="#causes"
+                  className="link-underline font-sans text-[13px] font-medium uppercase tracking-[0.14em] text-cream"
+                >
+                  See what it funds &rarr;
+                </a>
+              </div>
             </div>
-            <div className="border-l-2 border-gold-500 pl-6">
-              <div className="font-display text-[52px] font-semibold leading-none text-gold-400">
+            <div className="lg:justify-self-end lg:border-l-2 lg:border-gold-500 lg:pl-8">
+              <div className="font-display text-[clamp(42px,7vw,58px)] font-semibold leading-none text-gold-400">
                 {ngn(grandTotal)}
               </div>
               <div className="mt-2 font-sans text-[12px] uppercase tracking-[0.14em] text-cream/70">
-                Raised across {activeClasses} {activeClasses === 1 ? "class" : "classes"}
+                Raised so far by {activeClasses} {activeClasses === 1 ? "class" : "classes"}
               </div>
             </div>
           </div>
         </section>
 
-        <div className="mx-auto max-w-[1200px] px-8 py-14">
-          {/* What gifts fund */}
-          <SupportedProjects projects={projects} canManage={isSuper} />
+        <div className="mx-auto max-w-[1100px] px-8 py-16">
+          {/* Storytelling — what gifts fund */}
+          <div id="causes" className="scroll-mt-24">
+            <SupportedProjects projects={projects} canManage={isSuper} />
+          </div>
+
+          {/* Make your gift — the clear, prominent donate step */}
+          <section id="give" className="mb-16 scroll-mt-24">
+            <div className="mx-auto mb-8 max-w-[600px] text-center">
+              <p className="mb-2 font-sans text-[11px] uppercase tracking-[0.2em] text-gold-500">
+                Make your gift
+              </p>
+              <h2 className="mb-3 font-display text-[36px] font-medium text-emerald-900">
+                It takes two taps
+              </h2>
+              <p className="font-serif text-[16px] leading-relaxed text-ink-soft">
+                Pick an amount. It&rsquo;s credited to your class and recorded in
+                full. Give proudly, or anonymously.
+              </p>
+            </div>
+            <div className="mx-auto max-w-[560px]">
+              <GiveForm
+                me={user.id}
+                userEmail={user.email ?? ""}
+                donorName={profile?.full_name ?? ""}
+                donorYear={myYear}
+                donorClassLabel={myClassLabel}
+              />
+            </div>
+          </section>
 
           {/* Fundraising by class - everyone sees aggregate; own class highlighted */}
           {classCards.length > 0 && (
@@ -206,27 +247,13 @@ export default async function DonationsPage() {
             </section>
           )}
 
-          {/* Detail table + give card */}
-          <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
-            <section>
-              <h2 className="mb-5 font-display text-[26px] font-medium text-emerald-900">
-                {detailTitle}
-              </h2>
-              <DonationTable rows={rows} showClass={isSuper} />
-            </section>
-            <aside>
-              <h2 className="mb-5 font-display text-[26px] font-medium text-emerald-900">
-                Make a gift
-              </h2>
-              <GiveForm
-                me={user.id}
-                userEmail={user.email ?? ""}
-                donorName={profile?.full_name ?? ""}
-                donorYear={myYear}
-                donorClassLabel={myClassLabel}
-              />
-            </aside>
-          </div>
+          {/* Donations record */}
+          <section>
+            <h2 className="mb-5 font-display text-[26px] font-medium text-emerald-900">
+              {detailTitle}
+            </h2>
+            <DonationTable rows={rows} showClass={isSuper} />
+          </section>
         </div>
       </main>
       <SiteFooter />
