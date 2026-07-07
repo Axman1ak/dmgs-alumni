@@ -10,7 +10,7 @@ import { FormNotice } from "@/components/auth/AuthCard";
 const initial: FormState = {};
 
 /**
- * First-time profile creation. Members build their OWN directory listing —
+ * First-time profile creation. Members build their OWN directory listing -
  * there is no claiming of pre-existing records (that would let anyone
  * impersonate another alumnus). Every listing is owned by its creator.
  */
@@ -25,8 +25,8 @@ export function ClaimOrCreate({ defaultName }: { defaultName: string }) {
   return (
     <div>
       <p className="mb-6 text-[16px] leading-relaxed text-ink-soft">
-        You don&rsquo;t have a directory listing yet. Create yours below — it goes
-        live in the alumni directory once complete.
+        You don&rsquo;t have a directory listing yet. Create yours below. It goes
+        live in the old students directory once complete.
       </p>
 
       {state.error && <FormNotice tone="error">{state.error}</FormNotice>}

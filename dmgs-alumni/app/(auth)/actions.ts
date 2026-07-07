@@ -76,7 +76,7 @@ export async function signup(
 
   if (error) return { error: error.message };
 
-  // If email confirmation is disabled, sign-up returns a live session — the
+  // If email confirmation is disabled, sign-up returns a live session - the
   // member is already signed in, so send them to the pending-approval page.
   // Otherwise, tell them to confirm their email first.
   if (data.session) {

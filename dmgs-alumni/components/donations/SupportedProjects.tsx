@@ -5,7 +5,7 @@ import { ngn } from "@/lib/format";
 import { Reveal } from "./Reveal";
 
 /**
- * "Where your gift goes" — clickable project cards leading to full, transparent
+ * "Where your gift goes" - clickable project cards leading to full, transparent
  * project pages. Projects come from the database; the super admin manages them.
  */
 export function SupportedProjects({

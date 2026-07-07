@@ -86,7 +86,7 @@ export function HeaderNav({
             onClick={() => setMenuOpen((o) => !o)}
             className="flex items-center gap-2.5 rounded-full bg-emerald-900 py-1.5 pl-3.5 pr-1.5 font-sans text-[13px] text-cream"
           >
-            {initials || "—"}
+            {initials || "-"}
             <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-gold-500 text-[12px] font-semibold text-emerald-900">
               {initials || "?"}
             </span>

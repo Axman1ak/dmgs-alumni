@@ -93,7 +93,7 @@ export default async function ClassReportPage({
       <div className="mb-8 grid grid-cols-3 gap-4">
         <Stat label="Total raised" value={ngn(total)} />
         <Stat label="Donations" value={String(rows.length)} />
-        <Stat label="Goal" value={goal > 0 ? ngn(goal) : "—"} />
+        <Stat label="Goal" value={goal > 0 ? ngn(goal) : "-"} />
       </div>
 
       {/* Records */}
@@ -109,7 +109,7 @@ export default async function ClassReportPage({
           {rows.map((d) => (
             <tr key={d.id} className="border-b border-border">
               <td className="py-2.5 text-[14px] text-ink">
-                {d.is_anonymous ? "Anonymous" : d.donor_name ?? "—"}
+                {d.is_anonymous ? "Anonymous" : d.donor_name ?? "-"}
               </td>
               <td className="py-2.5 text-right text-[14px] font-semibold text-emerald-900">
                 {ngn(Number(d.amount))}

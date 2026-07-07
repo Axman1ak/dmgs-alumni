@@ -30,7 +30,7 @@ export function MemberRow({ member }: { member: Member }) {
         <p className="font-display text-[17px] font-semibold text-emerald-900">
           {member.full_name}
         </p>
-        <p className="font-sans text-[12px] text-ink-muted">{member.email ?? "—"}</p>
+        <p className="font-sans text-[12px] text-ink-muted">{member.email ?? "-"}</p>
         {state.error && <p className="font-sans text-[11px] text-danger">{state.error}</p>}
         {state.message && <p className="font-sans text-[11px] text-success">{state.message}</p>}
       </div>

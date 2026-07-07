@@ -124,7 +124,7 @@ export function ProfileEditForm({ person }: { person: Alumni }) {
           />
         </div>
         <p className="mt-3 font-sans text-[12px] text-ink-muted">
-          Your class year is locked — contact an administrator to correct it.
+          Your class year is locked. Contact an administrator to correct it.
         </p>
         <div className="mt-6">
           <SubmitButton>Save changes</SubmitButton>

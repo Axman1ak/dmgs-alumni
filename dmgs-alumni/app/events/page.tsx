@@ -58,7 +58,7 @@ export default async function EventsPage() {
                 Events &amp; Reunions
               </h1>
               <p className="mt-3 max-w-[480px] font-serif text-[17px] italic opacity-85">
-                Reunions, virtual meetups, and homecomings — wherever in the
+                Reunions, virtual meetups, and homecomings, wherever in the
                 world you are.
               </p>
             </div>

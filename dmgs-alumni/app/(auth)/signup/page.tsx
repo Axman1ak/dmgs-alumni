@@ -14,7 +14,7 @@ export default function SignupPage() {
   return (
     <AuthCard
       title="Request membership"
-      subtitle="Verified alumni of Doherty Memorial Grammar School"
+      subtitle="Verified old students of Doherty Memorial Grammar School"
     >
       {state.message ? (
         <FormNotice>{state.message}</FormNotice>

@@ -28,7 +28,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "DMGS Old Students Association",
   description:
-    "The alumni community of Doherty Memorial Grammar School, Ijero-Ekiti — est. 1955.",
+    "The old students community of Doherty Memorial Grammar School, Ijero-Ekiti, est. 1955.",
 };
 
 export default function RootLayout({

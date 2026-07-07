@@ -114,7 +114,7 @@ export function EventCard({
                 type="submit"
                 className={isGoing ? "btn btn-outline" : "btn btn-primary"}
               >
-                {isGoing ? "Cancel RSVP" : "RSVP — I'll be there"}
+                {isGoing ? "Cancel RSVP" : "RSVP, I'll be there"}
               </button>
             </form>
 

@@ -95,7 +95,7 @@ export function DirectoryClient({
       <div className="mx-auto max-w-[1280px] px-8 py-12">
         <div className="mb-8 flex items-baseline justify-between border-b border-border pb-4">
           <h2 className="font-display text-[32px] font-medium text-emerald-900">
-            Alumni Directory
+            Old Students Directory
           </h2>
           <span className="font-sans text-[13px] tracking-[0.04em] text-ink-muted">
             {filtered.length} {filtered.length === 1 ? "member" : "members"}
@@ -105,7 +105,7 @@ export function DirectoryClient({
         {filtered.length === 0 ? (
           <div className="py-20 text-center text-ink-muted">
             <h3 className="mb-2 font-display text-[28px] font-medium text-ink-soft">
-              No alumni found
+              No old students found
             </h3>
             <p className="font-sans text-[14px]">
               Try a different search or clear the filters.

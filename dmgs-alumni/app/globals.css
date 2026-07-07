@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ============================================================
-   DMGS base — paper background, warm institutional texture.
+   DMGS base - paper background, warm institutional texture.
    Mirrors the HTML prototype's body treatment.
    ============================================================ */
 @layer base {
@@ -44,7 +44,7 @@
       inset 0 0 0 4px var(--gold-500);
   }
 
-  /* Buttons — small-caps Inter, sharp 2px radius */
+  /* Buttons - small-caps Inter, sharp 2px radius */
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-sm font-sans text-[13px] font-medium uppercase tracking-[0.06em] transition-all;
     padding: 12px 22px;

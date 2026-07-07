@@ -9,7 +9,7 @@ export function SiteFooter() {
             Old Students Association
           </h5>
           <p className="max-w-md text-[14px] leading-7 opacity-80">
-            Connecting alumni of Doherty Memorial Grammar School, Ijero-Ekiti,
+            Connecting old students of Doherty Memorial Grammar School, Ijero-Ekiti,
             across Nigeria and the diaspora. Founded 1955.
           </p>
         </div>
@@ -20,7 +20,7 @@ export function SiteFooter() {
           <ul className="list-none space-y-1 text-[14px]">
             <li>
               <Link href="/directory" className="text-cream/80 hover:text-gold-400">
-                Alumni Directory
+                Old Students Directory
               </Link>
             </li>
             <li>

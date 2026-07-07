@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [state, action] = useFormState(login, initial);
 
   return (
-    <AuthCard title="Welcome back" subtitle="Sign in to the alumni community">
+    <AuthCard title="Welcome back" subtitle="Sign in to the old students community">
       {state.error && <FormNotice tone="error">{state.error}</FormNotice>}
       <form action={action}>
         <div className="mb-5">

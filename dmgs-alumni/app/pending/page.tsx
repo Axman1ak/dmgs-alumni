@@ -41,8 +41,8 @@ export default async function PendingPage() {
           <>
             Thanks{profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}.
             Your request is with our administrators for verification. You&rsquo;ll
-            be able to sign in as soon as it&rsquo;s approved — no need to do
-            anything else.
+            be able to sign in as soon as it&rsquo;s approved. There is no need
+            to do anything else.
           </>
         )}
       </p>

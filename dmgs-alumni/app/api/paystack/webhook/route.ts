@@ -7,13 +7,13 @@ export const runtime = "nodejs";
 /**
  * Paystack webhook. Paystack POSTs payment events here; we verify the
  * signature with the secret key, then confirm the matching donation.
- * Runs with the service-role client (bypasses RLS) — never trust the body
+ * Runs with the service-role client (bypasses RLS) - never trust the body
  * without verifying the signature first.
  */
 export async function POST(request: Request) {
   const secret = process.env.PAYSTACK_SECRET_KEY;
   if (!secret) {
-    // Not configured yet — accept nothing.
+    // Not configured yet - accept nothing.
     return NextResponse.json({ error: "not_configured" }, { status: 503 });
   }
 

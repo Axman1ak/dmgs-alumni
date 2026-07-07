@@ -91,7 +91,7 @@ export default async function AdminPage() {
                       </p>
                       <p className="mt-1.5 rounded-sm border-l-2 border-gold-500 bg-gold-500/10 px-2.5 py-1.5 font-sans text-[12px] text-ink-soft">
                         <span className="font-semibold text-emerald-900">Identity check:</span>{" "}
-                        {p.verification_answer || "— (not answered)"}
+                        {p.verification_answer || "(not answered)"}
                       </p>
                       <p className="mt-1 font-sans text-[11px] text-ink-muted">
                         Requested {shortDate(p.created_at)}

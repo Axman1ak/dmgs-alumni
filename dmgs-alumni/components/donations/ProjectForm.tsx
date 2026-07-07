@@ -35,21 +35,21 @@ export function ProjectForm({ project }: { project?: Project }) {
             <option value="library">Library (bookshelf)</option>
           </select>
         </div>
-        <Field name="photo_url" label="Photo URL (optional — overrides illustration)" defaultValue={project?.photo ?? ""} />
+        <Field name="photo_url" label="Photo URL (optional, overrides illustration)" defaultValue={project?.photo ?? ""} />
         <Field name="sort_order" label="Sort order" type="number" defaultValue={project ? "0" : "0"} />
         <Field name="slug" label="URL slug (blank = auto)" defaultValue={project?.slug ?? ""} />
       </div>
 
       <div className="mt-5">
         <label className="field-label" htmlFor="idea">
-          The story — separate paragraphs with a blank line
+          The story: separate paragraphs with a blank line
         </label>
         <textarea id="idea" name="idea" rows={6} defaultValue={ideaText} className="field-input" />
       </div>
 
       <div className="mt-5">
         <label className="field-label" htmlFor="budget">
-          Budget — one line per item, format: Label | amount
+          Budget: one line per item, format: Label | amount
         </label>
         <textarea
           id="budget"

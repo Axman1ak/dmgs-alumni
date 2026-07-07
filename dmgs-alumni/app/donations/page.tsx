@@ -67,7 +67,7 @@ export default async function DonationsPage() {
   const classMap = new Map((classes ?? []).map((c) => [c.year, c]));
   const myClassLabel = myYear ? classMap.get(myYear)?.label ?? null : null;
 
-  // Aggregate per-class totals — visible to every approved member now.
+  // Aggregate per-class totals - visible to every approved member now.
   const { data: totalsData } = await supabase.rpc("class_donation_totals");
   const classCards = ((totalsData ?? []) as Totals[])
     .map((t) => ({
@@ -111,7 +111,7 @@ export default async function DonationsPage() {
               </p>
               <h1 className="font-display text-[56px] font-medium leading-none">Giving</h1>
               <p className="mt-3 max-w-[460px] font-serif text-[17px] italic opacity-85">
-                Every gift carries the Doherty name forward — from the labs to the
+                Every gift carries the Doherty name forward, from the labs to the
                 library to the students who come next.
               </p>
             </div>
@@ -130,7 +130,7 @@ export default async function DonationsPage() {
           {/* What gifts fund */}
           <SupportedProjects projects={projects} canManage={isSuper} />
 
-          {/* Fundraising by class — everyone sees aggregate; own class highlighted */}
+          {/* Fundraising by class - everyone sees aggregate; own class highlighted */}
           {classCards.length > 0 && (
             <section className="mb-14">
               <h2 className="mb-6 border-b border-border pb-3 font-display text-[28px] font-medium text-emerald-900">
@@ -259,10 +259,10 @@ function DonationTable({ rows, showClass }: { rows: Donation[]; showClass: boole
           {rows.map((d) => (
             <tr key={d.id} className="border-b border-border last:border-b-0 hover:bg-cream-dark">
               <td className="px-4 py-3 text-[14px] text-ink">
-                {d.is_anonymous ? "Anonymous" : d.donor_name ?? "—"}
+                {d.is_anonymous ? "Anonymous" : d.donor_name ?? "-"}
               </td>
               {showClass && (
-                <td className="px-4 py-3 text-[14px] text-ink-soft">{d.class_year ?? "—"}</td>
+                <td className="px-4 py-3 text-[14px] text-ink-soft">{d.class_year ?? "-"}</td>
               )}
               <td className="px-4 py-3 text-right text-[14px] font-semibold text-emerald-900">
                 {ngn(Number(d.amount))}
