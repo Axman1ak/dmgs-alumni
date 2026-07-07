@@ -1,15 +1,21 @@
 /**
- * School crest medallion. Placeholder uses the "DM" monogram until the
- * client supplies the real crest file (Phase 6 / client responsibility #7).
+ * School crest. Uses the official crest served from the school's website.
+ * To self-host your own higher-resolution file instead, drop it at
+ * /public/crest.png and change CREST_SRC to "/crest.png".
  */
+const CREST_SRC =
+  "https://www.dohertyijero.com.ng/wp-content/uploads/cropped-favicon-270x270.png";
+
 export function Crest({ size = 52 }: { size?: number }) {
   return (
-    <span
-      className="crest shrink-0"
-      style={{ width: size, height: size, fontSize: size * 0.46 }}
-      aria-label="DMGS crest"
-    >
-      DM
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={CREST_SRC}
+      alt="Doherty Memorial Grammar School crest"
+      width={size}
+      height={size}
+      style={{ width: size, height: size }}
+      className="shrink-0 object-contain"
+    />
   );
 }
