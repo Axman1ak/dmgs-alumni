@@ -96,9 +96,7 @@ export default async function DonationsPage() {
     ? "Recent donations"
     : isClassAdmin
       ? `Class of ${adminYear} · donors`
-      : myYear
-        ? `Class of ${myYear} · donors`
-        : "Your donations";
+      : "Your giving";
 
   return (
     <>
@@ -202,7 +200,8 @@ export default async function DonationsPage() {
               </div>
               <p className="mt-4 font-sans text-[12px] text-ink-muted">
                 Everyone sees each class&rsquo;s total. Individual donors are visible
-                only within your own class{isSuper ? " — and to you, everywhere" : ""}.
+                only to a class&rsquo;s own administrator
+                {isSuper ? ", and to you across every class" : ""}.
               </p>
             </section>
           )}
