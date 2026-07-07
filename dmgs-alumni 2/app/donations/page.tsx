@@ -4,6 +4,8 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GiveForm } from "@/components/donations/GiveForm";
 import { SupportedProjects } from "@/components/donations/SupportedProjects";
+import { ProjectSpread } from "@/components/donations/ProjectSpread";
+import { Reveal } from "@/components/donations/Reveal";
 import { createClient } from "@/lib/supabase/server";
 import { mapProject } from "@/lib/projects";
 import { ngn, shortDate } from "@/lib/format";
@@ -102,158 +104,250 @@ export default async function DonationsPage() {
     <>
       <SiteHeader />
       <main>
-        {/* Hero */}
-        <section className="texture-diagonal bg-emerald-900 px-8 pb-16 pt-16 text-cream">
-          <div className="mx-auto grid max-w-[1100px] items-center gap-10 lg:grid-cols-[1.5fr_1fr]">
-            <div>
-              <p className="mb-3 font-sans text-[11px] uppercase tracking-[0.24em] text-gold-400">
-                Give back
+        {/* ------------------------------------------------------------------
+            1 · Cinematic hero — the school itself, one promise, one button
+        ------------------------------------------------------------------ */}
+        <section className="relative isolate overflow-hidden bg-emerald-900 text-cream">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://www.dohertyijero.com.ng/wp-content/uploads/entrance.png"
+            alt="The entrance of Doherty Memorial Grammar School, Ijero-Ekiti"
+            className="absolute inset-0 -z-10 h-full w-full object-cover"
+          />
+          <div
+            aria-hidden
+            className="absolute inset-0 -z-10 bg-gradient-to-b from-emerald-900/70 via-emerald-900/55 to-emerald-900"
+          />
+          <div aria-hidden className="texture-diagonal absolute inset-0 -z-10" />
+
+          <div className="mx-auto flex min-h-[82vh] max-w-[1100px] flex-col justify-end px-8 pb-14 pt-44">
+            <div className="max-w-[760px] animate-fadeIn">
+              <p className="mb-4 font-sans text-[11px] uppercase tracking-[0.26em] text-gold-400">
+                The giving campaign
               </p>
-              <h1 className="font-display text-[clamp(42px,6vw,64px)] font-medium leading-[1.02]">
+              <h1 className="font-display text-[clamp(46px,7.5vw,86px)] font-medium leading-[0.98]">
                 Build the school that built you.
               </h1>
-              <p className="mt-4 max-w-[500px] font-serif text-[17px] leading-relaxed text-cream/85">
-                A bursary that keeps a bright student in class. A laboratory where
-                they run the experiment instead of reading it. Every gift to
-                Doherty becomes something real, and every naira is accounted for.
+              <p className="mt-6 max-w-[540px] font-serif text-[18px] leading-relaxed text-cream/90">
+                A bursary that keeps a bright student in class. A laboratory
+                where they run the experiment instead of reading about it. Every
+                gift to Doherty becomes something real — and every naira is
+                accounted for.
               </p>
-              <div className="mt-8 flex flex-wrap items-center gap-x-8 gap-y-4">
-                <a href="#give" className="btn btn-gold px-8 py-4">
+              <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-5">
+                <a href="#give" className="btn btn-gold px-10 py-5 text-[15px] shadow-lg">
                   Make a gift
                 </a>
                 <a
                   href="#causes"
-                  className="link-underline font-sans text-[13px] font-medium uppercase tracking-[0.14em] text-cream"
+                  className="font-sans text-[13px] font-medium uppercase tracking-[0.14em] text-cream/90 transition-colors hover:text-gold-400"
                 >
-                  See what it funds &rarr;
+                  See what it builds ↓
                 </a>
               </div>
             </div>
-            <div className="lg:justify-self-end lg:border-l-2 lg:border-gold-500 lg:pl-8">
-              <div className="font-display text-[clamp(42px,7vw,58px)] font-semibold leading-none text-gold-400">
-                {ngn(grandTotal)}
-              </div>
-              <div className="mt-2 font-sans text-[12px] uppercase tracking-[0.14em] text-cream/70">
-                Raised so far by {activeClasses} {activeClasses === 1 ? "class" : "classes"}
-              </div>
+
+            {/* Social proof */}
+            <div className="mt-14 border-t border-cream/20 pt-6">
+              {grandTotal > 0 ? (
+                <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                  <span className="font-display text-[clamp(28px,4vw,40px)] font-semibold leading-none text-gold-400">
+                    {ngn(grandTotal)}
+                  </span>
+                  <span className="font-sans text-[12px] uppercase tracking-[0.16em] text-cream/75">
+                    raised so far by {activeClasses}{" "}
+                    {activeClasses === 1 ? "class" : "classes"}
+                  </span>
+                </p>
+              ) : (
+                <p className="font-sans text-[12px] uppercase tracking-[0.16em] text-cream/75">
+                  The campaign is just beginning — be among the first names in
+                  the book.
+                </p>
+              )}
             </div>
           </div>
         </section>
 
-        <div className="mx-auto max-w-[1100px] px-8 py-16">
-          {/* Storytelling — what gifts fund */}
-          <div id="causes" className="scroll-mt-24">
+        {/* ------------------------------------------------------------------
+            2 · Storytelling — each project as a full-width editorial spread
+        ------------------------------------------------------------------ */}
+        {projects.length > 0 && (
+          <section id="causes" className="scroll-mt-24 bg-paper px-8 py-24">
+            <div className="mx-auto max-w-[1100px]">
+              <Reveal>
+                <div className="mb-16 max-w-[640px]">
+                  <p className="mb-3 font-sans text-[11px] uppercase tracking-[0.24em] text-gold-500">
+                    Current priorities
+                  </p>
+                  <h2 className="font-display text-[clamp(34px,4.5vw,52px)] font-medium leading-[1.04] text-emerald-900">
+                    Not a fund. A promise, kept in public.
+                  </h2>
+                  <p className="mt-4 font-serif text-[16px] leading-relaxed text-ink-soft">
+                    These are the projects the association is funding right now —
+                    each with an open budget, a clear goal, and a story you can
+                    read to the last line.
+                  </p>
+                </div>
+              </Reveal>
+              <div className="space-y-24">
+                {projects.map((p, i) => (
+                  <ProjectSpread key={p.slug} project={p} index={i} />
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ------------------------------------------------------------------
+            3 · The give moment — the focal point of the page
+        ------------------------------------------------------------------ */}
+        <section
+          id="give"
+          className="relative isolate scroll-mt-24 overflow-hidden bg-emerald-900 text-cream"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://www.dohertyijero.com.ng/wp-content/uploads/lib.png"
+            alt=""
+            aria-hidden
+            className="absolute inset-0 -z-10 h-full w-full object-cover opacity-25"
+          />
+          <div
+            aria-hidden
+            className="absolute inset-0 -z-10 bg-gradient-to-b from-emerald-900/85 via-emerald-900/90 to-emerald-900"
+          />
+          <div aria-hidden className="texture-diagonal absolute inset-0 -z-10" />
+
+          <div className="mx-auto max-w-[1100px] px-8 py-24 lg:py-28">
+            <Reveal>
+              <div className="mx-auto mb-12 max-w-[640px] text-center">
+                <p className="mb-3 font-sans text-[11px] uppercase tracking-[0.26em] text-gold-400">
+                  Make your gift
+                </p>
+                <h2 className="font-display text-[clamp(36px,5vw,56px)] font-medium leading-[1.04]">
+                  Put your name in the book.
+                </h2>
+                <p className="mt-5 font-serif text-[17px] leading-relaxed text-cream/85">
+                  Pick an amount — it is credited to{" "}
+                  {myClassLabel ?? "your graduating class"}, recorded in full,
+                  and reported openly. Give proudly, or quietly.
+                </p>
+              </div>
+            </Reveal>
+            <Reveal delay={120}>
+              <div className="mx-auto max-w-[600px] border-2 border-gold-500/60 p-2 shadow-lg sm:p-3">
+                <GiveForm
+                  me={user.id}
+                  userEmail={user.email ?? ""}
+                  donorName={profile?.full_name ?? ""}
+                  donorYear={myYear}
+                  donorClassLabel={myClassLabel}
+                />
+              </div>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* Compact index of every fund (+ management entry point for admins) */}
+        {(projects.length > 0 || isSuper) && (
+          <div className="mx-auto max-w-[1100px] px-8 pt-20">
             <SupportedProjects projects={projects} canManage={isSuper} />
           </div>
+        )}
 
-          {/* Make your gift — the clear, prominent donate step */}
-          <section id="give" className="mb-16 scroll-mt-24">
-            <div className="mx-auto mb-8 max-w-[600px] text-center">
-              <p className="mb-2 font-sans text-[11px] uppercase tracking-[0.2em] text-gold-500">
-                Make your gift
-              </p>
-              <h2 className="mb-3 font-display text-[36px] font-medium text-emerald-900">
-                It takes two taps
-              </h2>
-              <p className="font-serif text-[16px] leading-relaxed text-ink-soft">
-                Pick an amount. It&rsquo;s credited to your class and recorded in
-                full. Give proudly, or anonymously.
-              </p>
-            </div>
-            <div className="mx-auto max-w-[560px]">
-              <GiveForm
-                me={user.id}
-                userEmail={user.email ?? ""}
-                donorName={profile?.full_name ?? ""}
-                donorYear={myYear}
-                donorClassLabel={myClassLabel}
-              />
-            </div>
-          </section>
-
-          {/* Fundraising by class - everyone sees aggregate; own class highlighted */}
-          {classCards.length > 0 && (
-            <section className="mb-14">
-              <h2 className="mb-6 border-b border-border pb-3 font-display text-[28px] font-medium text-emerald-900">
-                Fundraising by class
-              </h2>
-              <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {classCards.map((c) => {
-                  const pct = c.goal > 0 ? Math.min(100, (c.total / c.goal) * 100) : 0;
-                  const isMine = c.year === myYear;
-                  const canDetail = isSuper || c.year === adminYear;
-                  return (
-                    <div
-                      key={c.year}
-                      className={`p-5 ${
-                        isMine
-                          ? "border-2 border-gold-500 bg-emerald-900 text-cream shadow-lg"
-                          : "border border-border bg-cream"
-                      }`}
-                    >
-                      <div className="mb-3 flex items-baseline justify-between">
-                        <span
-                          className={`font-display text-[22px] font-semibold ${
-                            isMine ? "text-cream" : "text-emerald-900"
-                          }`}
-                        >
-                          {c.label}
-                        </span>
-                        {isMine && (
-                          <span className="font-sans text-[10px] uppercase tracking-[0.14em] text-gold-400">
-                            Your class
-                          </span>
-                        )}
-                      </div>
+        {/* ------------------------------------------------------------------
+            4 · For the record — class totals and the donation ledger
+        ------------------------------------------------------------------ */}
+        <div className="border-t border-border bg-cream/60 px-8 py-20">
+          <div className="mx-auto max-w-[1100px]">
+            {/* Fundraising by class - everyone sees aggregate; own class highlighted */}
+            {classCards.length > 0 && (
+              <section className="mb-16">
+                <p className="mb-2 font-sans text-[11px] uppercase tracking-[0.24em] text-gold-500">
+                  For the record
+                </p>
+                <h2 className="mb-6 border-b border-border pb-3 font-display text-[28px] font-medium text-emerald-900">
+                  Fundraising by class
+                </h2>
+                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {classCards.map((c) => {
+                    const pct = c.goal > 0 ? Math.min(100, (c.total / c.goal) * 100) : 0;
+                    const isMine = c.year === myYear;
+                    const canDetail = isSuper || c.year === adminYear;
+                    return (
                       <div
-                        className={`mb-2.5 h-2.5 overflow-hidden rounded-full ${
-                          isMine ? "bg-emerald-800" : "bg-cream-dark"
+                        key={c.year}
+                        className={`p-5 ${
+                          isMine
+                            ? "border-2 border-gold-500 bg-emerald-900 text-cream shadow-lg"
+                            : "border border-border bg-cream"
                         }`}
                       >
-                        <div className="h-full rounded-full bg-gold-500" style={{ width: `${pct}%` }} />
-                      </div>
-                      <p className={`font-sans text-[14px] ${isMine ? "text-cream/90" : "text-ink-soft"}`}>
-                        <span className={`font-semibold ${isMine ? "text-gold-400" : "text-emerald-900"}`}>
-                          {ngn(c.total)}
-                        </span>
-                        {c.goal > 0 && (
-                          <span className={isMine ? "text-cream/60" : "text-ink-muted"}>
-                            {" "}of {ngn(c.goal)}
+                        <div className="mb-3 flex items-baseline justify-between">
+                          <span
+                            className={`font-display text-[22px] font-semibold ${
+                              isMine ? "text-cream" : "text-emerald-900"
+                            }`}
+                          >
+                            {c.label}
                           </span>
-                        )}
-                        <span className={isMine ? "text-cream/60" : "text-ink-muted"}>
-                          {" · "}{c.donors} {c.donors === 1 ? "gift" : "gifts"}
-                        </span>
-                      </p>
-                      {canDetail && (
-                        <Link
-                          href={`/donations/report/${c.year}`}
-                          className={`mt-2 inline-block font-sans text-[12px] hover:underline ${
-                            isMine ? "text-gold-400" : "text-emerald-700"
+                          {isMine && (
+                            <span className="font-sans text-[10px] uppercase tracking-[0.14em] text-gold-400">
+                              Your class
+                            </span>
+                          )}
+                        </div>
+                        <div
+                          className={`mb-2.5 h-2.5 overflow-hidden rounded-full ${
+                            isMine ? "bg-emerald-800" : "bg-cream-dark"
                           }`}
                         >
-                          View / print report →
-                        </Link>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              <p className="mt-4 font-sans text-[12px] text-ink-muted">
-                Everyone sees each class&rsquo;s total. Individual donors are visible
-                only to a class&rsquo;s own administrator
-                {isSuper ? ", and to you across every class" : ""}.
-              </p>
-            </section>
-          )}
+                          <div className="h-full rounded-full bg-gold-500" style={{ width: `${pct}%` }} />
+                        </div>
+                        <p className={`font-sans text-[14px] ${isMine ? "text-cream/90" : "text-ink-soft"}`}>
+                          <span className={`font-semibold ${isMine ? "text-gold-400" : "text-emerald-900"}`}>
+                            {ngn(c.total)}
+                          </span>
+                          {c.goal > 0 && (
+                            <span className={isMine ? "text-cream/60" : "text-ink-muted"}>
+                              {" "}of {ngn(c.goal)}
+                            </span>
+                          )}
+                          <span className={isMine ? "text-cream/60" : "text-ink-muted"}>
+                            {" · "}{c.donors} {c.donors === 1 ? "gift" : "gifts"}
+                          </span>
+                        </p>
+                        {canDetail && (
+                          <Link
+                            href={`/donations/report/${c.year}`}
+                            className={`mt-2 inline-block font-sans text-[12px] hover:underline ${
+                              isMine ? "text-gold-400" : "text-emerald-700"
+                            }`}
+                          >
+                            View / print report →
+                          </Link>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <p className="mt-4 font-sans text-[12px] text-ink-muted">
+                  Everyone sees each class&rsquo;s total. Individual donors are visible
+                  only to a class&rsquo;s own administrator
+                  {isSuper ? ", and to you across every class" : ""}.
+                </p>
+              </section>
+            )}
 
-          {/* Donations record */}
-          <section>
-            <h2 className="mb-5 font-display text-[26px] font-medium text-emerald-900">
-              {detailTitle}
-            </h2>
-            <DonationTable rows={rows} showClass={isSuper} />
-          </section>
+            {/* Donations record */}
+            <section>
+              <h2 className="mb-5 font-display text-[26px] font-medium text-emerald-900">
+                {detailTitle}
+              </h2>
+              <DonationTable rows={rows} showClass={isSuper} />
+            </section>
+          </div>
         </div>
       </main>
       <SiteFooter />
