@@ -147,7 +147,7 @@ export default async function DonationsPage() {
           />
           <div aria-hidden className="texture-diagonal absolute inset-0 -z-10" />
 
-          <div className="mx-auto flex min-h-[82vh] max-w-[1100px] flex-col justify-end px-8 pb-14 pt-44">
+          <div className="mx-auto flex min-h-[56vh] max-w-[1100px] flex-col justify-end px-8 pb-12 pt-28">
             <div className="max-w-[760px] animate-fadeIn">
               <p className="mb-4 font-sans text-[11px] uppercase tracking-[0.26em] text-gold-400">
                 The giving campaign
@@ -175,7 +175,7 @@ export default async function DonationsPage() {
             </div>
 
             {/* Social proof */}
-            <div className="mt-14 border-t border-cream/20 pt-6">
+            <div className="mt-9 border-t border-cream/20 pt-6">
               {grandTotal > 0 ? (
                 <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <span className="font-display text-[clamp(28px,4vw,40px)] font-semibold leading-none text-gold-400">
@@ -200,10 +200,10 @@ export default async function DonationsPage() {
             2 · Storytelling — each project as a full-width editorial spread
         ------------------------------------------------------------------ */}
         {projects.length > 0 && (
-          <section id="causes" className="scroll-mt-24 bg-paper px-8 py-24">
+          <section id="causes" className="scroll-mt-24 bg-paper px-8 py-16">
             <div className="mx-auto max-w-[1100px]">
               <Reveal>
-                <div className="mb-16 max-w-[640px]">
+                <div className="mb-10 max-w-[640px]">
                   <p className="mb-3 font-sans text-[11px] uppercase tracking-[0.24em] text-gold-500">
                     Current priorities
                   </p>
@@ -217,7 +217,7 @@ export default async function DonationsPage() {
                   </p>
                 </div>
               </Reveal>
-              <div className="space-y-24">
+              <div className="space-y-14">
                 {projects.map((p, i) => (
                   <ProjectSpread key={p.slug} project={p} index={i} />
                 ))}
@@ -246,9 +246,9 @@ export default async function DonationsPage() {
           />
           <div aria-hidden className="texture-diagonal absolute inset-0 -z-10" />
 
-          <div className="mx-auto max-w-[1100px] px-8 py-24 lg:py-28">
+          <div className="mx-auto max-w-[1100px] px-8 py-16 lg:py-20">
             <Reveal>
-              <div className="mx-auto mb-12 max-w-[640px] text-center">
+              <div className="mx-auto mb-8 max-w-[640px] text-center">
                 <p className="mb-3 font-sans text-[11px] uppercase tracking-[0.26em] text-gold-400">
                   Make your gift
                 </p>
@@ -279,7 +279,7 @@ export default async function DonationsPage() {
         {/* ------------------------------------------------------------------
             4 · For the record — class totals and the donation ledger
         ------------------------------------------------------------------ */}
-        <div id="ledger" className="scroll-mt-24 border-t border-border bg-cream/60 px-8 py-20">
+        <div id="ledger" className="scroll-mt-24 border-t border-border bg-cream/60 px-8 py-14">
           <div className="mx-auto max-w-[1100px]">
             {/* Fundraising by class - everyone sees aggregate; own class highlighted */}
             {classCards.length > 0 && (
