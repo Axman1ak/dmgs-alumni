@@ -15,7 +15,7 @@ const LIB_IMG = `${SCHOOL}/wp-content/uploads/lib.png`;
 const SCHOOL_LINKS = [
   { href: `${SCHOOL}/`, label: "School Home", note: "The official DMGS website" },
   { href: `${SCHOOL}/our-school/`, label: "Our School", note: "History since 1955" },
-  { href: `${SCHOOL}/alumni/`, label: "Alumni", note: "OSA news & notices" },
+  { href: `${SCHOOL}/alumni/`, label: "Old Students", note: "OSA news & notices" },
   { href: `${SCHOOL}/gallery/`, label: "Gallery", note: "Photos of campus & events" },
   { href: `${SCHOOL}/news/`, label: "News", note: "Latest from the school" },
   { href: `${SCHOOL}/contact-us/`, label: "Contact", note: "Reach the school" },
@@ -63,7 +63,7 @@ export default async function HomePage() {
             </h1>
             <p className="animate-fadeIn mx-auto mt-6 max-w-[600px] text-[18px] leading-relaxed text-cream/85">
               The home of the Doherty Memorial Grammar School Old Students
-              Association — reconnecting classmates across Nigeria, the United
+              Association, reconnecting classmates across Nigeria, the United
               States, Canada, the United Kingdom, and beyond.
             </p>
             <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
@@ -211,8 +211,8 @@ export default async function HomePage() {
           </Reveal>
           <div className="grid gap-6 md:grid-cols-3">
             {[
-              { title: "Find your classmates", body: "A searchable, yearbook-style directory of alumni by name, class year, profession, and location." },
-              { title: "Gather again", body: "Reunions, virtual meetups, and homecomings with RSVP — wherever in the world you are." },
+              { title: "Find your classmates", body: "A searchable, yearbook-style directory of old student by name, class year, profession, and location." },
+              { title: "Gather again", body: "Reunions, virtual meetups, and homecomings with RSVP, wherever in the world you are." },
               { title: "Give back", body: "Support the school and your class projects securely, with transparent class-by-class giving." },
             ].map((c, i) => (
               <Reveal key={c.title} delay={i * 90}>
@@ -235,7 +235,7 @@ export default async function HomePage() {
                 Rejoin the Doherty family
               </h2>
               <p className="mx-auto mt-4 max-w-[440px] font-serif text-[17px] italic text-cream/85">
-                Request your membership today — an administrator will verify and
+                Request your membership today, and an administrator will verify and
                 welcome you in.
               </p>
               <Link href={user ? "/pending" : "/signup"} className="btn btn-gold mt-8 px-8 py-4">
