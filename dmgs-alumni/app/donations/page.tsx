@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GiveForm } from "@/components/donations/GiveForm";
-import { SupportedProjects } from "@/components/donations/SupportedProjects";
 import { ProjectSpread } from "@/components/donations/ProjectSpread";
 import { Reveal } from "@/components/donations/Reveal";
 import { createClient } from "@/lib/supabase/server";
@@ -104,6 +103,34 @@ export default async function DonationsPage() {
     <>
       <SiteHeader />
       <main>
+        {/* ------------------------------------------------------------------
+            0 · Admin quick-access — pinned at the very top so admins reach
+            reports and management without scrolling the campaign. Regular
+            members never render this bar.
+        ------------------------------------------------------------------ */}
+        {(isSuper || isClassAdmin) && (
+          <div className="border-b border-gold-500/30 bg-emerald-900 text-cream">
+            <div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-x-6 gap-y-2 px-8 py-3">
+              <span className="font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-gold-400">
+                Administrator
+              </span>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-sans text-[13px] text-cream/90">
+                <a href="#ledger" className="transition-colors hover:text-gold-400">
+                  {isSuper
+                    ? "All class reports & donor ledger"
+                    : `Class of ${adminYear} report`}{" "}
+                  ↓
+                </a>
+                {isSuper && (
+                  <Link href="/donations/manage" className="transition-colors hover:text-gold-400">
+                    Manage projects →
+                  </Link>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ------------------------------------------------------------------
             1 · Cinematic hero — the school itself, one promise, one button
         ------------------------------------------------------------------ */}
@@ -249,17 +276,10 @@ export default async function DonationsPage() {
           </div>
         </section>
 
-        {/* Compact index of every fund (+ management entry point for admins) */}
-        {(projects.length > 0 || isSuper) && (
-          <div className="mx-auto max-w-[1100px] px-8 pt-20">
-            <SupportedProjects projects={projects} canManage={isSuper} />
-          </div>
-        )}
-
         {/* ------------------------------------------------------------------
             4 · For the record — class totals and the donation ledger
         ------------------------------------------------------------------ */}
-        <div className="border-t border-border bg-cream/60 px-8 py-20">
+        <div id="ledger" className="scroll-mt-24 border-t border-border bg-cream/60 px-8 py-20">
           <div className="mx-auto max-w-[1100px]">
             {/* Fundraising by class - everyone sees aggregate; own class highlighted */}
             {classCards.length > 0 && (
