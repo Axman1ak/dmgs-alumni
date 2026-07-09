@@ -8,6 +8,12 @@ import { SubmitButton } from "@/components/auth/SubmitButton";
 
 const initial: AuthState = {};
 
+const CURRENT_YEAR = new Date().getFullYear();
+const CLASS_YEARS = Array.from(
+  { length: CURRENT_YEAR - 1955 + 1 },
+  (_, i) => CURRENT_YEAR - i,
+);
+
 export default function SignupPage() {
   const [state, action] = useFormState(signup, initial);
 
@@ -40,7 +46,7 @@ export default function SignupPage() {
               <label htmlFor="class_year" className="field-label">Graduating class *</label>
               <select id="class_year" name="class_year" required defaultValue="" className="field-input">
                 <option value="" disabled>Select your year…</option>
-                {Array.from({ length: 2020 - 1955 + 1 }, (_, i) => 2020 - i).map((y) => (
+                {CLASS_YEARS.map((y) => (
                   <option key={y} value={y}>{y}</option>
                 ))}
               </select>

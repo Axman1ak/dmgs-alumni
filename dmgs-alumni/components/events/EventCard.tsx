@@ -12,14 +12,19 @@ const FORMAT_LABEL: Record<AlumniEvent["format"], string> = {
   hybrid: "Hybrid",
 };
 
+// Format in a fixed timezone (WAT, Nigeria) so server-rendered HTML matches the
+// client render regardless of the viewer's locale — avoids hydration mismatch
+// and a wrong day/time flash.
+const TZ = "Africa/Lagos";
+
 function dateParts(iso: string) {
   const d = new Date(iso);
   return {
-    month: d.toLocaleDateString("en-US", { month: "short" }).toUpperCase(),
-    day: d.getDate(),
-    year: d.getFullYear(),
-    time: d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }),
-    weekday: d.toLocaleDateString("en-US", { weekday: "long" }),
+    month: d.toLocaleDateString("en-US", { month: "short", timeZone: TZ }).toUpperCase(),
+    day: Number(d.toLocaleDateString("en-US", { day: "numeric", timeZone: TZ })),
+    year: Number(d.toLocaleDateString("en-US", { year: "numeric", timeZone: TZ })),
+    time: d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: TZ }),
+    weekday: d.toLocaleDateString("en-US", { weekday: "long", timeZone: TZ }),
   };
 }
 
@@ -89,7 +94,7 @@ export function EventCard({
           </span>
           {event.location && <span>{event.location}</span>}
           <span>
-            {attendeeCount} {attendeeCount === 1 ? "attending" : "attending"}
+            {attendeeCount} {attendeeCount === 1 ? "attendee" : "attendees"}
           </span>
         </div>
 

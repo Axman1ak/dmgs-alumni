@@ -63,8 +63,15 @@ export async function updateSession(request: NextRequest) {
     const approved = profile?.status === "approved";
     const isAuthPage = AUTH_PATHS.some((p) => path === p);
 
-    // Signed in but not approved -> hold on /pending
-    if (!approved && path !== "/pending" && !path.startsWith("/auth")) {
+    // Signed in but not approved -> hold on /pending. Password-reset and auth
+    // callback paths are exempt so a locked-out member can still set a new
+    // password (they arrive here with a fresh session from the email link).
+    if (
+      !approved &&
+      path !== "/pending" &&
+      !path.startsWith("/auth") &&
+      !path.startsWith("/reset-password")
+    ) {
       const url = request.nextUrl.clone();
       url.pathname = "/pending";
       return NextResponse.redirect(url);

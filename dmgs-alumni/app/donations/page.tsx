@@ -158,8 +158,8 @@ export default async function DonationsPage() {
                 Build the school that built you.
               </h1>
               <p className="mt-4 max-w-[480px] font-serif text-[16px] leading-relaxed text-cream/90">
-                Every gift to Doherty becomes something real — a bursary, a
-                laboratory, a library — and every naira is accounted for.
+                Every gift to Doherty becomes something real: a bursary, a
+                laboratory, a library. And every naira is accounted for.
               </p>
               <a href="#give" className="btn btn-gold mt-6 px-8 py-4 text-[15px] shadow-lg">
                 Make a gift
@@ -180,7 +180,7 @@ export default async function DonationsPage() {
                 </div>
               ) : (
                 <p className="max-w-[220px] font-sans text-[12px] uppercase tracking-[0.16em] text-cream/75 sm:text-right">
-                  The campaign is just beginning — be among the first names in the
+                  The campaign is just beginning. Be among the first names in the
                   book.
                 </p>
               )}
@@ -230,7 +230,7 @@ export default async function DonationsPage() {
                   Put your name in the book.
                 </h2>
                 <p className="mt-5 font-serif text-[17px] leading-relaxed text-cream/85">
-                  Pick an amount — it is credited to{" "}
+                  Pick an amount. It is credited to{" "}
                   {myClassLabel ?? "your graduating class"}, recorded in full,
                   and reported openly. Give proudly, or quietly.
                 </p>

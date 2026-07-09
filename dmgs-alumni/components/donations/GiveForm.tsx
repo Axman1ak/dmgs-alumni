@@ -57,15 +57,16 @@ export function GiveForm({
     const supabase = createClient();
     const reference = `DMGS-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
+    // Only amount, anonymity, currency and the reference are sent from the
+    // browser. donor_profile_id, class_year, donor_name and status are pinned
+    // server-side by the guard_donation_insert trigger (migration 0016) so a
+    // gift cannot be forged, misattributed to another class, or self-marked
+    // "success". The webhook alone promotes a donation to success.
     const { error } = await supabase.from("donations").insert({
-      donor_profile_id: me,
-      donor_name: anonymous ? "Anonymous" : donorName || null,
-      class_year: donorYear,
       amount: effectiveAmount,
       currency: "NGN",
       is_anonymous: anonymous,
       paystack_reference: reference,
-      status: "pending",
     });
     if (error) {
       setBusy(false);

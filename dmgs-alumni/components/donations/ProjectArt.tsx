@@ -1,4 +1,3 @@
-import Image from "next/image";
 import type { Project } from "@/lib/projects";
 
 /**
@@ -17,7 +16,14 @@ export function ProjectArt({
   if (project.photo) {
     return (
       <div className={`relative overflow-hidden ${className}`}>
-        <Image src={project.photo} alt={project.title} fill className="object-cover" />
+        {/* Plain img: project.photo is admin-supplied and may point at any host,
+            which next/image would reject unless the domain is pre-whitelisted. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={project.photo}
+          alt={project.title}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
       </div>
     );
   }

@@ -112,7 +112,7 @@ export default async function MessagesPage() {
       name: "Announcements",
       lastMessage: lastMsg.get(broadcast.id)?.body ?? null,
       lastAt: lastMsg.get(broadcast.id)?.created_at ?? null,
-      unread: 0,
+      unread: unread.get(broadcast.id) ?? 0,
     });
   }
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { ngn, shortDate } from "@/lib/format";
 import { PrintButton } from "@/components/donations/PrintButton";
@@ -21,6 +21,7 @@ export default async function ClassReportPage({
   params: { year: string };
 }) {
   const year = Number(params.year);
+  if (!Number.isInteger(year) || year < 1955 || year > 2100) notFound();
   const supabase = createClient();
   const {
     data: { user },
