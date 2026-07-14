@@ -98,7 +98,10 @@ export default async function HomePage() {
             </div>
 
             {/* Stats */}
-            <div className="mx-auto mt-12 flex max-w-[720px] flex-wrap justify-center gap-x-8 gap-y-8 sm:gap-x-16 border-t border-cream/20 pt-9">
+            {/* Grid, not flex-wrap: with four stats the last one ("5+ countries
+                reunited") was dropping onto a second line. 4 across on desktop,
+                2x2 on a phone. */}
+            <div className="mx-auto mt-12 grid max-w-[860px] grid-cols-2 gap-x-6 gap-y-8 border-t border-cream/20 pt-9 sm:grid-cols-4 sm:gap-x-8">
               {[
                 { num: `${years}`, label: "Years of legacy" },
                 { num: "1955", label: "Founded" },
