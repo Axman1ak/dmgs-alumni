@@ -17,8 +17,6 @@ export const dynamic = "force-dynamic";
 // have the originals.
 const HERO_IMG =
   "https://static.wixstatic.com/media/2a4bdb_909f206c54af4a2989b7e4a29c5961dc~mv2.jpg";
-const GIVE_IMG =
-  "https://static.wixstatic.com/media/2a4bdb_03f565ac6c974177b445e33a5b5735cf~mv2.jpg";
 
 type Totals = {
   class_year: number;
@@ -215,20 +213,9 @@ export default async function DonationsPage() {
         ------------------------------------------------------------------ */}
         <section
           id="give"
-          className="relative scroll-mt-24 overflow-hidden bg-emerald-900 text-cream"
+          className="texture-diagonal scroll-mt-24 bg-emerald-900 text-cream"
         >
-          <div
-            aria-hidden
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url('${GIVE_IMG}')` }}
-          />
-          <div
-            aria-hidden
-            className="absolute inset-0 bg-gradient-to-b from-emerald-900/92 via-emerald-900/94 to-emerald-900"
-          />
-          <div aria-hidden className="texture-diagonal absolute inset-0 opacity-60" />
-
-          <div className="relative mx-auto max-w-[1100px] px-8 py-16 lg:py-20">
+          <div className="mx-auto max-w-[1100px] px-8 py-16 lg:py-20">
             <Reveal>
               <div className="mx-auto mb-8 max-w-[640px] text-center">
                 <p className="mb-3 font-sans text-[11px] uppercase tracking-[0.26em] text-gold-400">

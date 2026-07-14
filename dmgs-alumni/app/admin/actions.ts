@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type AdminState = { error?: string; message?: string };
 
@@ -71,6 +72,35 @@ export async function rejectMember(formData: FormData) {
   const { supabase } = await requireSuperAdmin();
   await supabase.from("profiles").update({ status: "rejected" }).eq("id", id(formData));
   revalidatePath("/admin");
+}
+
+/**
+ * Permanently delete a member: their directory listing, their profile, and the
+ * login itself. Needs the service-role client because removing an auth user is
+ * an admin-only operation.
+ *
+ * Donation records are deliberately NOT deleted — donations.donor_profile_id is
+ * ON DELETE SET NULL and donor_name is a stored snapshot, so the financial
+ * history stays intact and the class totals don't silently change.
+ */
+export async function deleteMember(formData: FormData) {
+  const { user } = await requireSuperAdmin();
+  const memberId = id(formData);
+
+  if (!memberId) throw new Error("No member specified.");
+  if (memberId === user.id) throw new Error("You can't delete your own account.");
+
+  const admin = createAdminClient();
+
+  // Directory listing first (profile_id would otherwise be nulled and orphaned).
+  await admin.from("alumni").delete().eq("profile_id", memberId);
+
+  // Deleting the auth user cascades to profiles.
+  const { error } = await admin.auth.admin.deleteUser(memberId);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin");
+  revalidatePath("/directory");
 }
 
 /** Assign a role. Class admins get a graduating year; wired to classes.admin_id. */

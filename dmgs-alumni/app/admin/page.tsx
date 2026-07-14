@@ -24,7 +24,9 @@ export default async function AdminPage() {
 
   const { data: pending } = await supabase
     .from("profiles")
-    .select("id, full_name, email, occupation, country, verification_answer, created_at")
+    .select(
+      "id, full_name, email, occupation, class_year, city, country, phone, bio, verification_answer, created_at",
+    )
     .eq("status", "pending")
     .order("created_at", { ascending: true });
 
@@ -42,7 +44,7 @@ export default async function AdminPage() {
       <SiteHeader />
       <main>
         <section className="texture-diagonal bg-emerald-900 px-8 py-12 text-cream">
-          <div className="mx-auto flex max-w-[1100px] items-end justify-between">
+          <div className="mx-auto flex max-w-[1100px] flex-wrap items-end justify-between gap-6">
             <div>
               <p className="mb-2 font-sans text-[11px] uppercase tracking-[0.2em] text-gold-400">
                 Administration
@@ -75,41 +77,68 @@ export default async function AdminPage() {
                 No one waiting. New sign-ups will appear here for review.
               </p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {pendingRows.map((p) => (
                   <div
                     key={p.id}
-                    className="flex flex-wrap items-center justify-between gap-3 border border-border border-l-4 border-l-gold-500 bg-cream px-6 py-4"
+                    className="border border-border border-l-4 border-l-gold-500 bg-cream px-6 py-5"
                   >
-                    <div className="min-w-0 flex-1">
-                      <p className="font-display text-[20px] font-semibold text-emerald-900">
-                        {p.full_name}
+                    {/* Header: who, and the decision buttons */}
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="font-display text-[22px] font-semibold text-emerald-900">
+                          {p.full_name}
+                        </p>
+                        <p className="font-sans text-[13px] text-ink-soft">{p.email}</p>
+                        <p className="mt-0.5 font-sans text-[11px] text-ink-muted">
+                          Requested {shortDate(p.created_at)}
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <form action={approveMember}>
+                          <input type="hidden" name="id" value={p.id} />
+                          <button type="submit" className="btn btn-primary px-5 py-2.5 text-[12px]">
+                            Approve
+                          </button>
+                        </form>
+                        <form action={rejectMember}>
+                          <input type="hidden" name="id" value={p.id} />
+                          <button type="submit" className="btn btn-danger px-5 py-2.5 text-[12px]">
+                            Reject
+                          </button>
+                        </form>
+                      </div>
+                    </div>
+
+                    {/* Everything they submitted */}
+                    <dl className="mt-4 grid gap-x-8 gap-y-3 border-t border-border pt-4 sm:grid-cols-2 lg:grid-cols-3">
+                      <Detail
+                        label="Graduating class"
+                        value={p.class_year ? String(p.class_year) : null}
+                      />
+                      <Detail label="Profession" value={p.occupation} />
+                      <Detail label="Phone" value={p.phone} />
+                      <Detail label="City" value={p.city} />
+                      <Detail label="Country" value={p.country} />
+                    </dl>
+
+                    {p.bio && (
+                      <div className="mt-4 border-t border-border pt-4">
+                        <p className="font-sans text-[11px] uppercase tracking-[0.12em] text-ink-muted">
+                          About them
+                        </p>
+                        <p className="mt-1.5 text-[14px] leading-relaxed text-ink-soft">{p.bio}</p>
+                      </div>
+                    )}
+
+                    {/* The thing that actually decides it */}
+                    <div className="mt-4 border-l-2 border-gold-500 bg-gold-500/10 px-4 py-3">
+                      <p className="font-sans text-[11px] uppercase tracking-[0.12em] text-ink-muted">
+                        Identity check &middot; senior prefect in their final year
                       </p>
-                      <p className="font-sans text-[13px] text-ink-soft">{p.email}</p>
-                      <p className="font-sans text-[12px] text-ink-soft">
-                        {[p.occupation, p.country].filter(Boolean).join(" · ") || "No profession/country given"}
-                      </p>
-                      <p className="mt-1.5 rounded-sm border-l-2 border-gold-500 bg-gold-500/10 px-2.5 py-1.5 font-sans text-[12px] text-ink-soft">
-                        <span className="font-semibold text-emerald-900">Identity check:</span>{" "}
+                      <p className="mt-1 font-sans text-[15px] font-semibold text-emerald-900">
                         {p.verification_answer || "(not answered)"}
                       </p>
-                      <p className="mt-1 font-sans text-[11px] text-ink-muted">
-                        Requested {shortDate(p.created_at)}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <form action={approveMember}>
-                        <input type="hidden" name="id" value={p.id} />
-                        <button type="submit" className="btn btn-primary px-5 py-2.5 text-[12px]">
-                          Approve
-                        </button>
-                      </form>
-                      <form action={rejectMember}>
-                        <input type="hidden" name="id" value={p.id} />
-                        <button type="submit" className="btn btn-danger px-5 py-2.5 text-[12px]">
-                          Reject
-                        </button>
-                      </form>
                     </div>
                   </div>
                 ))}
@@ -129,13 +158,30 @@ export default async function AdminPage() {
             </p>
             <div className="overflow-hidden rounded-[2px] border border-border bg-cream">
               {memberRows.map((m) => (
-                <MemberRow key={m.id} member={m} />
+                <MemberRow key={m.id} member={m} isSelf={m.id === user.id} />
               ))}
             </div>
+            <p className="mt-3 font-sans text-[12px] text-ink-muted">
+              Deleting a member removes their account, sign-in, and directory listing.
+              Their donation records are kept, so class totals stay accurate.
+            </p>
           </section>
         </div>
       </main>
       <SiteFooter />
     </>
+  );
+}
+
+function Detail({ label, value }: { label: string; value: string | null }) {
+  return (
+    <div>
+      <dt className="font-sans text-[11px] uppercase tracking-[0.12em] text-ink-muted">
+        {label}
+      </dt>
+      <dd className="mt-0.5 font-sans text-[14px] text-ink">
+        {value || <span className="text-ink-muted">Not given</span>}
+      </dd>
+    </div>
   );
 }
