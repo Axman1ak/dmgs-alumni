@@ -7,10 +7,11 @@ import { createClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 const SCHOOL = "https://www.dohertyijero.com.ng";
-// Real photos served from the school's official site. Swap for self-hosted
-// files in /public whenever you have higher-resolution originals.
-const HERO_IMG = `${SCHOOL}/wp-content/uploads/entrance.png`;
-const LIB_IMG = `${SCHOOL}/wp-content/uploads/lib.png`;
+// Self-hosted in /public. Previously these were hotlinked from the school's
+// WordPress site; the 900KB library PNG regularly failed to load on mobile
+// connections, leaving a broken image on the page.
+const HERO_IMG = "/entrance.png";
+const LIB_IMG = "/school.png";
 
 const SCHOOL_LINKS = [
   { href: `${SCHOOL}/`, label: "School Home", note: "The official DMGS website" },
@@ -125,12 +126,15 @@ export default async function HomePage() {
         <section className="mx-auto max-w-[1200px] px-5 sm:px-8 py-20">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             <Reveal>
-              <div className="relative overflow-hidden border border-border shadow-lg">
+              {/* Fixed aspect ratio: without it, a slow or failed image left a
+                  huge empty box on mobile instead of a photo. */}
+              <div className="relative aspect-[4/3] overflow-hidden border border-border bg-emerald-900 shadow-lg">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={LIB_IMG}
                   alt="Doherty Memorial Grammar School"
-                  className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+                  loading="lazy"
+                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 hover:scale-105"
                 />
                 <span className="absolute bottom-0 left-0 bg-emerald-900/90 px-4 py-2 font-sans text-[11px] uppercase tracking-[0.16em] text-gold-400 backdrop-blur">
                   Ijero-Ekiti, Nigeria

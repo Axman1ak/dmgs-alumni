@@ -3,8 +3,7 @@
  * To self-host your own higher-resolution file instead, drop it at
  * /public/crest.png and change CREST_SRC to "/crest.png".
  */
-const CREST_SRC =
-  "https://www.dohertyijero.com.ng/wp-content/uploads/cropped-favicon-270x270.png";
+const CREST_SRC = "/crest.png";
 
 export function Crest({ size = 52 }: { size?: number }) {
   return (
