@@ -145,20 +145,21 @@ export default async function DonationsPage() {
             Deliberately short (a band, not a full-screen photo hero) so the
             page reads as a focused ask rather than a landing page.
         ------------------------------------------------------------------ */}
-        <section className="relative isolate overflow-hidden bg-emerald-900 text-cream">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={HERO_IMG}
-            alt="Construction work funded by the Old Students Association at Doherty Memorial Grammar School"
-            className="absolute inset-0 -z-10 h-full w-full object-cover"
+        <section className="relative overflow-hidden bg-emerald-900 text-cream">
+          {/* Same layering as the landing hero: photo, then a green wash over
+              it, then the diagonal texture, then the content on top. */}
+          <div
+            aria-hidden
+            className="absolute inset-0 scale-105 bg-cover bg-center"
+            style={{ backgroundImage: `url('${HERO_IMG}')` }}
           />
           <div
             aria-hidden
-            className="absolute inset-0 -z-10 bg-gradient-to-r from-emerald-900/92 via-emerald-900/78 to-emerald-900/60"
+            className="absolute inset-0 bg-gradient-to-b from-emerald-900/85 via-emerald-900/75 to-emerald-900/90"
           />
-          <div aria-hidden className="texture-diagonal absolute inset-0 -z-10" />
+          <div aria-hidden className="texture-diagonal absolute inset-0 opacity-60" />
 
-          <div className="mx-auto flex max-w-[1100px] flex-wrap items-end justify-between gap-x-10 gap-y-6 px-8 py-12">
+          <div className="relative mx-auto flex max-w-[1100px] flex-wrap items-end justify-between gap-x-10 gap-y-6 px-8 py-12">
             <div className="max-w-[560px] animate-fadeIn">
               <p className="mb-3 font-sans text-[11px] uppercase tracking-[0.26em] text-gold-400">
                 The giving campaign
@@ -214,22 +215,20 @@ export default async function DonationsPage() {
         ------------------------------------------------------------------ */}
         <section
           id="give"
-          className="relative isolate scroll-mt-24 overflow-hidden bg-emerald-900 text-cream"
+          className="relative scroll-mt-24 overflow-hidden bg-emerald-900 text-cream"
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={GIVE_IMG}
-            alt=""
+          <div
             aria-hidden
-            className="absolute inset-0 -z-10 h-full w-full object-cover opacity-25"
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url('${GIVE_IMG}')` }}
           />
           <div
             aria-hidden
-            className="absolute inset-0 -z-10 bg-gradient-to-b from-emerald-900/85 via-emerald-900/90 to-emerald-900"
+            className="absolute inset-0 bg-gradient-to-b from-emerald-900/92 via-emerald-900/94 to-emerald-900"
           />
-          <div aria-hidden className="texture-diagonal absolute inset-0 -z-10" />
+          <div aria-hidden className="texture-diagonal absolute inset-0 opacity-60" />
 
-          <div className="mx-auto max-w-[1100px] px-8 py-16 lg:py-20">
+          <div className="relative mx-auto max-w-[1100px] px-8 py-16 lg:py-20">
             <Reveal>
               <div className="mx-auto mb-8 max-w-[640px] text-center">
                 <p className="mb-3 font-sans text-[11px] uppercase tracking-[0.26em] text-gold-400">
