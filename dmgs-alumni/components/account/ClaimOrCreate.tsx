@@ -37,6 +37,7 @@ export function ClaimOrCreate({ defaultName }: { defaultName: string }) {
           <Field name="class_year" label="Class year (e.g. 1977)" type="number" />
           <Field name="occupation" label="Occupation" />
           <Field name="city" label="City" />
+          <Field name="state" label="State / Province" />
           <Field name="country" label="Country" />
           <Field name="phone" label="Phone" />
           <Field name="email" label="Email" type="email" />

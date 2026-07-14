@@ -27,18 +27,50 @@ export function ProfileEditForm({ person }: { person: Alumni }) {
 
   const badge = classBadge(person.class_year);
 
+  // Derive the extension from the file's real MIME type, not its filename.
+  // Filenames lie (or have no extension at all, e.g. photos pasted from a
+  // phone), and Supabase Storage keys the content type off the extension —
+  // which is why anything that wasn't a .jpg was failing.
+  const EXT_BY_TYPE: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/jpg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+    "image/gif": "gif",
+    "image/heic": "heic",
+    "image/heif": "heif",
+    "image/avif": "avif",
+  };
+
   async function onPickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file || !person.profile_id) return;
     setPhotoError(null);
+
+    const type = (file.type || "").toLowerCase();
+    const ext = EXT_BY_TYPE[type];
+    if (!ext) {
+      setPhotoError(
+        "That file type isn't supported. Use a JPG, PNG, WebP, GIF or HEIC image.",
+      );
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setPhotoError("That image is larger than 8MB. Please choose a smaller one.");
+      return;
+    }
+
     setUploading(true);
     try {
       const supabase = createClient();
-      const ext = file.name.split(".").pop() ?? "jpg";
       const path = `${person.profile_id}/avatar-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("avatars")
-        .upload(path, file, { upsert: true });
+        .upload(path, file, {
+          upsert: true,
+          contentType: type, // be explicit; don't let it default to octet-stream
+          cacheControl: "3600",
+        });
       if (upErr) throw upErr;
 
       const { data } = supabase.storage.from("avatars").getPublicUrl(path);
@@ -86,7 +118,7 @@ export function ProfileEditForm({ person }: { person: Alumni }) {
           <input
             ref={fileRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/gif,image/heic,image/heif,image/avif"
             onChange={onPickPhoto}
             className="hidden"
           />
@@ -109,6 +141,7 @@ export function ProfileEditForm({ person }: { person: Alumni }) {
           </div>
           <Field name="occupation" label="Occupation" defaultValue={person.occupation} />
           <Field name="city" label="City" defaultValue={person.city} />
+          <Field name="state" label="State / Province" defaultValue={person.state} />
           <Field name="country" label="Country" defaultValue={person.country} />
           <Field name="phone" label="Phone" defaultValue={person.phone} />
           <Field name="email" label="Email" type="email" defaultValue={person.email} />

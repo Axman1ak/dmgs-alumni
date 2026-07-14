@@ -25,7 +25,7 @@ export default async function AdminPage() {
   const { data: pending } = await supabase
     .from("profiles")
     .select(
-      "id, full_name, email, occupation, class_year, city, country, phone, bio, verification_answer, created_at",
+      "id, full_name, email, occupation, class_year, city, state, country, phone, bio, verification_answer, created_at",
     )
     .eq("status", "pending")
     .order("created_at", { ascending: true });
@@ -119,6 +119,7 @@ export default async function AdminPage() {
                       <Detail label="Profession" value={p.occupation} />
                       <Detail label="Phone" value={p.phone} />
                       <Detail label="City" value={p.city} />
+                      <Detail label="State" value={p.state} />
                       <Detail label="Country" value={p.country} />
                     </dl>
 

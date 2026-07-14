@@ -19,7 +19,7 @@ export default async function AccountPage() {
   const { data: mine } = await supabase
     .from("alumni")
     .select(
-      "id, profile_id, full_name, class_year, occupation, city, country, phone, email, bio, photo_url, chapter, is_published",
+      "id, profile_id, full_name, class_year, occupation, city, state, country, phone, email, bio, photo_url, chapter, is_published",
     )
     .eq("profile_id", user.id)
     .maybeSingle();

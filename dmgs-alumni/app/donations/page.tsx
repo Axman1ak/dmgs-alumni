@@ -111,34 +111,6 @@ export default async function DonationsPage() {
       <SiteHeader />
       <main>
         {/* ------------------------------------------------------------------
-            0 · Admin quick-access — pinned at the very top so admins reach
-            reports and management without scrolling the campaign. Regular
-            members never render this bar.
-        ------------------------------------------------------------------ */}
-        {(isSuper || isClassAdmin) && (
-          <div className="border-b border-gold-500/30 bg-emerald-900 text-cream">
-            <div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-3 sm:px-8">
-              <span className="font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-gold-400">
-                Administrator
-              </span>
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-sans text-[13px] text-cream/90">
-                <a href="#ledger" className="transition-colors hover:text-gold-400">
-                  {isSuper
-                    ? "All class reports & donor ledger"
-                    : `Class of ${adminYear} report`}{" "}
-                  ↓
-                </a>
-                {isSuper && (
-                  <Link href="/donations/manage" className="transition-colors hover:text-gold-400">
-                    Manage projects →
-                  </Link>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ------------------------------------------------------------------
             1 · Compact hero band — one promise, the button, the total raised.
             Deliberately short (a band, not a full-screen photo hero) so the
             page reads as a focused ask rather than a landing page.

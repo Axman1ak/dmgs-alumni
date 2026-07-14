@@ -35,7 +35,7 @@ export function AlumniModal({
 
   const badge = classBadge(person.class_year);
   const location =
-    [person.city, person.country].filter(Boolean).join(", ") || null;
+    [person.city, person.state, person.country].filter(Boolean).join(", ") || null;
 
   return (
     <div

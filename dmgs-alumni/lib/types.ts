@@ -5,6 +5,7 @@ export type Alumni = {
   class_year: number | null;
   occupation: string | null;
   city: string | null;
+  state: string | null;
   country: string | null;
   phone: string | null;
   email: string | null;

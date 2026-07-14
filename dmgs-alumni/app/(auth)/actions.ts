@@ -25,6 +25,7 @@ type SignupDetails = {
   classYear: string;
   occupation: string;
   city: string;
+  state: string;
   country: string;
   phone: string;
   verificationAnswer: string;
@@ -83,6 +84,7 @@ async function notifyAdminsOfSignup(d: SignupDetails): Promise<void> {
           ${row("Class year", d.classYear)}
           ${row("Profession", d.occupation)}
           ${row("City", d.city)}
+          ${row("State", d.state)}
           ${row("Country", d.country)}
           ${row("Phone", d.phone)}
         </table>
@@ -151,6 +153,7 @@ export async function signup(
   const occupation = String(formData.get("occupation") ?? "").trim();
   const classYear = String(formData.get("class_year") ?? "").trim();
   const city = String(formData.get("city") ?? "").trim();
+  const state = String(formData.get("state") ?? "").trim();
   const country = String(formData.get("country") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const bio = String(formData.get("bio") ?? "").trim();
@@ -173,6 +176,7 @@ export async function signup(
         occupation,
         class_year: classYear,
         city,
+        state,
         country,
         phone,
         bio,
@@ -191,6 +195,7 @@ export async function signup(
     classYear,
     occupation,
     city,
+    state,
     country,
     phone,
     verificationAnswer,
