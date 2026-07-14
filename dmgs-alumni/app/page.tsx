@@ -7,11 +7,13 @@ import { createClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 const SCHOOL = "https://www.dohertyijero.com.ng";
-// Self-hosted in /public. Previously these were hotlinked from the school's
-// WordPress site; the 900KB library PNG regularly failed to load on mobile
-// connections, leaving a broken image on the page.
-const HERO_IMG = "/entrance.png";
-const LIB_IMG = "/school.png";
+// Hero: the school gate, from the school's own site. Loads reliably.
+const HERO_IMG = `${SCHOOL}/wp-content/uploads/entrance.png`;
+// The old lib.png was a 900KB PNG that regularly failed to load on mobile
+// connections, leaving a broken image on the page. This is the same school,
+// served resized by a proper CDN: ~47KB instead of ~894KB.
+const LIB_IMG =
+  "https://static.wixstatic.com/media/2a4bdb_63532e0e7d4c40c58354d4bb9f8c5bd7~mv2.jpg/v1/fill/w_1000,h_750,al_c,q_85,enc_auto/dmgs.jpg";
 
 const SCHOOL_LINKS = [
   { href: `${SCHOOL}/`, label: "School Home", note: "The official DMGS website" },
