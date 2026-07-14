@@ -33,7 +33,7 @@ export default function SignupPage() {
           {state.error && <FormNotice tone="error">{state.error}</FormNotice>}
           <form action={action}>
             {/* Identity + account */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-x-3 sm:grid-cols-2">
               <Field name="first_name" label="First name *" autoComplete="given-name" required />
               <Field name="last_name" label="Last name *" autoComplete="family-name" required />
             </div>
@@ -51,7 +51,7 @@ export default function SignupPage() {
                 ))}
               </select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-x-3 sm:grid-cols-2">
               <Field name="city" label="City" autoComplete="address-level2" />
               <Field name="country" label="Country *" autoComplete="country-name" required />
             </div>

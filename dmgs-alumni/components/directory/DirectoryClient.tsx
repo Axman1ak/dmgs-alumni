@@ -41,7 +41,7 @@ export function DirectoryClient({
   return (
     <>
       {/* Search / filter bar */}
-      <div className="sticky top-[93px] z-40 border-b border-border bg-cream px-8 py-6">
+      <div className="sticky top-[76px] z-40 border-b border-border bg-cream px-5 py-4 sm:px-8 sm:py-6 md:top-[93px]">
         <div className="mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-3 md:grid-cols-[1fr_auto_auto_auto]">
           <input
             value={query}
@@ -52,7 +52,7 @@ export function DirectoryClient({
           <select
             value={year}
             onChange={(e) => setYear(e.target.value)}
-            className="min-w-[140px] rounded-[4px] border border-border bg-paper px-4 py-3.5 font-sans text-[13px] text-ink-soft focus:border-emerald-700 focus:outline-none"
+            className="min-w-[140px] rounded-[4px] border border-border bg-paper px-4 py-3.5 font-sans text-[16px] text-ink-soft sm:text-[13px] focus:border-emerald-700 focus:outline-none"
           >
             <option value="">All years</option>
             {years.map((y) => (
@@ -64,7 +64,7 @@ export function DirectoryClient({
           <select
             value={country}
             onChange={(e) => setCountry(e.target.value)}
-            className="min-w-[140px] rounded-[4px] border border-border bg-paper px-4 py-3.5 font-sans text-[13px] text-ink-soft focus:border-emerald-700 focus:outline-none"
+            className="min-w-[140px] rounded-[4px] border border-border bg-paper px-4 py-3.5 font-sans text-[16px] text-ink-soft sm:text-[13px] focus:border-emerald-700 focus:outline-none"
           >
             <option value="">All countries</option>
             {countries.map((c) => (

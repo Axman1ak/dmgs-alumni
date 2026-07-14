@@ -7,7 +7,7 @@ import { initialsOf, classBadge, orPlaceholder } from "@/lib/types";
 
 function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[140px_1fr] gap-6 border-b border-border py-4 last:border-b-0">
+    <div className="grid grid-cols-1 gap-1 border-b border-border py-3.5 last:border-b-0 sm:grid-cols-[140px_1fr] sm:gap-6 sm:py-4">
       <span className="pt-0.5 font-sans text-[11px] uppercase tracking-[0.16em] text-ink-muted">
         {label}
       </span>
@@ -39,15 +39,15 @@ export function AlumniModal({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-900/60 p-6 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-900/60 p-3 backdrop-blur-sm sm:p-6"
       onClick={onClose}
     >
       <div
-        className="max-h-[90vh] w-full max-w-[760px] overflow-y-auto rounded border border-border bg-paper shadow-lg"
+        className="max-h-[90dvh] w-full max-w-[760px] overflow-y-auto rounded border border-border bg-paper shadow-lg"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="texture-diagonal relative bg-emerald-900 px-10 pb-10 pt-12 text-cream">
+        <div className="texture-diagonal relative bg-emerald-900 px-5 pb-8 pt-10 text-cream sm:px-10 sm:pb-10 sm:pt-12">
           <button
             onClick={onClose}
             aria-label="Close"
@@ -70,7 +70,7 @@ export function AlumniModal({
               )}
             </div>
             <div className="text-center sm:text-left">
-              <h2 className="mb-2.5 font-display text-[42px] font-medium leading-none">
+              <h2 className="mb-2.5 font-display text-[30px] font-medium leading-none sm:text-[42px]">
                 {person.full_name}
               </h2>
               <p className="mb-4 font-serif text-[18px] italic opacity-85">
@@ -86,7 +86,7 @@ export function AlumniModal({
         </div>
 
         {/* Body */}
-        <div className="px-10 py-8">
+        <div className="px-5 py-6 sm:px-10 sm:py-8">
           <DetailRow label="Occupation" value={orPlaceholder(person.occupation)} />
           <DetailRow
             label="Class year"

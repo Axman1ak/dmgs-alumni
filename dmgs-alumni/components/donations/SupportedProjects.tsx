@@ -19,7 +19,7 @@ export function SupportedProjects({
 
   return (
     <section className="mb-16">
-      <div className="mb-6 flex items-baseline justify-between border-b border-border pb-3">
+      <div className="mb-6 flex flex-wrap items-baseline justify-between gap-2 border-b border-border pb-3">
         <h2 className="font-display text-[28px] font-medium text-emerald-900">
           Where your gift goes
         </h2>

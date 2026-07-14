@@ -48,13 +48,13 @@ export default async function EventsPage() {
       <SiteHeader />
       <main>
         {/* Hero */}
-        <section className="texture-diagonal bg-emerald-900 px-8 pb-12 pt-16 text-cream">
+        <section className="texture-diagonal bg-emerald-900 px-5 sm:px-8 pb-12 pt-16 text-cream">
           <div className="mx-auto flex max-w-[1280px] flex-wrap items-end justify-between gap-6">
             <div>
               <p className="mb-3 font-sans text-[11px] uppercase tracking-[0.24em] text-gold-400">
                 Gather again
               </p>
-              <h1 className="font-display text-[54px] font-medium leading-none">
+              <h1 className="font-display text-[34px] font-medium leading-none sm:text-[54px]">
                 Events &amp; Reunions
               </h1>
               <p className="mt-3 max-w-[480px] font-serif text-[17px] italic opacity-85">
@@ -66,7 +66,7 @@ export default async function EventsPage() {
           </div>
         </section>
 
-        <div className="mx-auto max-w-[1280px] px-8 py-12">
+        <div className="mx-auto max-w-[1280px] px-5 sm:px-8 py-12">
           <section className="mb-14">
             <h2 className="mb-6 border-b border-border pb-3 font-display text-[28px] font-medium text-emerald-900">
               Upcoming

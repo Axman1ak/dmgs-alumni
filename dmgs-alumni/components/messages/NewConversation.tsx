@@ -98,8 +98,8 @@ export function NewConversation({
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-900/60 p-6 backdrop-blur-sm" onClick={onClose}>
-      <div className="max-h-[80vh] w-full max-w-[480px] overflow-hidden rounded border border-border bg-paper shadow-lg" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-900/60 p-3 backdrop-blur-sm sm:p-6" onClick={onClose}>
+      <div className="max-h-[85dvh] w-full max-w-[480px] overflow-y-auto rounded border border-border bg-paper shadow-lg" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h3 className="font-display text-[22px] font-semibold text-emerald-900">New conversation</h3>
           <button onClick={onClose} aria-label="Close" className="text-ink-muted">✕</button>
@@ -149,7 +149,7 @@ export function NewConversation({
             </div>
           )}
 
-          <div className="max-h-[280px] overflow-y-auto rounded border border-border">
+          <div className="max-h-[45vh] overflow-y-auto rounded border border-border sm:max-h-[280px]">
             {results.length === 0 ? (
               <p className="px-4 py-6 text-center font-sans text-[13px] text-ink-muted">No members found.</p>
             ) : (

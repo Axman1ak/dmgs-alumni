@@ -45,7 +45,7 @@ export function MemberRow({
           value={role}
           onChange={(e) => setRole(e.target.value)}
           aria-label="Role"
-          className="rounded-sm border border-border bg-paper px-2.5 py-2 font-sans text-[13px]"
+          className="rounded-sm border border-border bg-paper px-2.5 py-3 font-sans text-[16px] md:text-[13px]"
         >
           <option value="member">Member</option>
           <option value="class_admin">Class admin</option>
@@ -58,7 +58,7 @@ export function MemberRow({
           placeholder="Class yr"
           aria-label="Class year"
           defaultValue={member.class_year ?? ""}
-          className="rounded-sm border border-border bg-paper px-2.5 py-2 font-sans text-[13px]"
+          className="rounded-sm border border-border bg-paper px-2.5 py-3 font-sans text-[16px] md:text-[13px]"
         />
 
         <input
@@ -68,7 +68,7 @@ export function MemberRow({
           aria-label="Administered class year"
           defaultValue={member.admin_of_year ?? ""}
           disabled={role !== "class_admin"}
-          className="rounded-sm border border-border bg-paper px-2.5 py-2 font-sans text-[13px] disabled:opacity-40"
+          className="rounded-sm border border-border bg-paper px-2.5 py-3 font-sans text-[16px] md:text-[13px] disabled:opacity-40"
         />
 
         <button type="submit" className="btn btn-primary px-4 py-2 text-[12px]">

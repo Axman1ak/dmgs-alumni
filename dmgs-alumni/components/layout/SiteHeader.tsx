@@ -52,7 +52,7 @@ export async function SiteHeader() {
 
       {/* Header */}
       <header className="sticky top-0 z-50 border-b border-border bg-cream/90 backdrop-blur">
-        <div className="relative mx-auto flex max-w-[1280px] items-center gap-8 px-6 py-5 md:px-8">
+        <div className="relative mx-auto flex max-w-[1280px] items-center gap-3 px-5 py-4 md:gap-8 md:px-8 md:py-5">
           <Link href="/" className="flex items-center gap-3.5 no-underline">
             <Crest />
             <span>

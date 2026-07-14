@@ -1,6 +1,6 @@
 export function SiteFooter() {
   return (
-    <footer className="texture-diagonal mt-20 bg-emerald-900 px-8 pb-6 pt-12 text-cream">
+    <footer className="texture-diagonal mt-20 bg-emerald-900 px-5 sm:px-8 pb-6 pt-12 text-cream">
       <div className="mx-auto max-w-[1280px] border-b border-white/10 pb-8">
         <h5 className="mb-4 font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-gold-400">
           Old Students Association

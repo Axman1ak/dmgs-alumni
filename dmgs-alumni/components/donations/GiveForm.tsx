@@ -111,7 +111,7 @@ export function GiveForm({
   }
 
   return (
-    <div className="border border-border bg-cream p-8">
+    <div className="border border-border bg-cream p-5 sm:p-8">
       <p className="mb-6 font-sans text-[13px] text-ink-muted">
         {donorClassLabel
           ? `Credited to ${donorClassLabel}.`
@@ -125,7 +125,7 @@ export function GiveForm({
         </div>
       )}
 
-      <div className="mb-5 grid grid-cols-3 gap-3">
+      <div className="mb-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
         {PRESETS.map((p) => (
           <button
             key={p}
@@ -134,7 +134,7 @@ export function GiveForm({
               setAmount(p);
               setCustom("");
             }}
-            className={`rounded-sm border px-3 py-3 font-sans text-[14px] transition-colors ${
+            className={`rounded-sm border px-2 py-3.5 font-sans text-[13px] transition-colors sm:text-[14px] ${
               !custom && amount === p
                 ? "border-emerald-700 bg-emerald-900 text-cream"
                 : "border-border bg-paper text-ink-soft hover:border-emerald-700"
@@ -161,6 +161,7 @@ export function GiveForm({
       <label className="mb-6 flex items-center gap-2.5 font-sans text-[13px] text-ink-soft">
         <input
           type="checkbox"
+          className="h-5 w-5 shrink-0"
           checked={anonymous}
           onChange={(e) => setAnonymous(e.target.checked)}
         />

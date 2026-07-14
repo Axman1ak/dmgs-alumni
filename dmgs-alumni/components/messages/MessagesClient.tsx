@@ -133,11 +133,13 @@ export function MessagesClient({
     setActiveId(id);
   }
 
+  // 100dvh, not 100vh: on iOS Safari 100vh ignores the address bar and toolbar,
+  // which pushed the message composer below the fold.
   return (
-    <main className="mx-auto grid h-[calc(100vh-160px)] max-h-[820px] max-w-[1280px] grid-cols-1 overflow-hidden border border-border bg-cream md:mt-4 md:grid-cols-[320px_1fr]">
+    <main className="mx-auto grid h-[calc(100dvh-127px)] max-h-[820px] max-w-[1280px] grid-cols-1 overflow-hidden border-y border-border bg-cream md:mt-4 md:h-[calc(100dvh-160px)] md:grid-cols-[320px_1fr] md:border">
       {/* Sidebar */}
       <aside
-        className={`flex flex-col border-r border-border bg-paper ${
+        className={`flex flex-col bg-paper md:border-r md:border-border ${
           activeId ? "hidden md:flex" : "flex"
         }`}
       >
@@ -198,7 +200,7 @@ export function MessagesClient({
             <div className="flex items-center gap-3 border-b border-border bg-cream px-5 py-4">
               <button
                 onClick={() => setActiveId(null)}
-                className="font-sans text-[20px] text-ink-muted md:hidden"
+                className="-ml-1 flex h-10 w-10 shrink-0 items-center justify-center font-sans text-[24px] text-ink-muted md:hidden"
                 aria-label="Back"
               >
                 ‹
@@ -233,7 +235,7 @@ export function MessagesClient({
                           </span>
                         )}
                         <span
-                          className={`inline-block rounded-lg px-3.5 py-2 text-[15px] ${
+                          className={`inline-block break-words rounded-lg px-3.5 py-2 text-[15px] ${
                             mine
                               ? "bg-emerald-900 text-cream"
                               : "border border-border bg-cream text-ink"

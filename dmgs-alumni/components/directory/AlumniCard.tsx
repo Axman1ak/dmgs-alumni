@@ -64,23 +64,28 @@ export function AlumniRow({
   return (
     <button
       onClick={() => onOpen(person)}
-      className="grid w-full grid-cols-[48px_2fr_1fr_1.5fr] items-center gap-6 border-b border-border px-6 py-4 text-left transition-colors last:border-b-0 hover:bg-cream-dark"
+      className="grid w-full grid-cols-[40px_1fr] items-center gap-3 border-b border-border px-4 py-4 text-left transition-colors last:border-b-0 hover:bg-cream-dark sm:grid-cols-[48px_2fr_1fr_1.5fr] sm:gap-6 sm:px-6"
     >
-      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-900 font-display text-[20px] font-semibold text-gold-400">
+      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-900 font-display text-[17px] font-semibold text-gold-400 sm:h-12 sm:w-12 sm:text-[20px]">
         {initialsOf(person.full_name)}
       </span>
-      <span>
-        <span className="block font-display text-[20px] font-semibold text-emerald-900">
+      {/* On a phone only the name + class show; profession and location would
+          force the whole page to scroll sideways. Tapping opens the full card. */}
+      <span className="min-w-0">
+        <span className="block truncate font-display text-[18px] font-semibold text-emerald-900 sm:text-[20px]">
           {person.full_name}
         </span>
-        <span className="font-sans text-[12px] tracking-[0.06em] text-ink-muted">
+        <span className="block truncate font-sans text-[12px] tracking-[0.06em] text-ink-muted">
           {badge ? `Class of ${badge}` : "Year not provided"}
+          <span className="sm:hidden">
+            {person.occupation ? ` · ${person.occupation}` : ""}
+          </span>
         </span>
       </span>
-      <span className="text-[14px] text-ink-soft">
+      <span className="hidden min-w-0 truncate text-[14px] text-ink-soft sm:block">
         {orPlaceholder(person.occupation)}
       </span>
-      <span className="text-[14px] text-ink-soft">
+      <span className="hidden min-w-0 truncate text-[14px] text-ink-soft sm:block">
         {orPlaceholder(person.city ?? person.country)}
       </span>
     </button>

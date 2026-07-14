@@ -69,7 +69,7 @@ export default async function ClassReportPage({
   const goal = Number(cls?.donation_goal ?? 0);
 
   return (
-    <div className="mx-auto max-w-[820px] px-8 py-12 print:py-0">
+    <div className="mx-auto max-w-[820px] px-5 py-10 sm:px-8 sm:py-12 print:py-0">
       <div className="mb-8 flex items-center justify-between print:hidden">
         <Link href="/donations" className="font-sans text-[13px] text-emerald-700 hover:underline">
           ← Back to donations
@@ -91,14 +91,14 @@ export default async function ClassReportPage({
       </div>
 
       {/* Summary */}
-      <div className="mb-8 grid grid-cols-3 gap-4">
+      <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         <Stat label="Total raised" value={ngn(total)} />
         <Stat label="Donations" value={String(rows.length)} />
         <Stat label="Goal" value={goal > 0 ? ngn(goal) : "-"} />
       </div>
 
       {/* Records */}
-      <table className="w-full border-collapse text-left">
+      <div className="-mx-5 overflow-x-auto px-5 print:mx-0 print:overflow-visible print:px-0"><table className="w-full min-w-[420px] border-collapse text-left print:min-w-0">
         <thead>
           <tr className="border-b-2 border-emerald-900">
             <th className="py-2 font-sans text-[11px] uppercase tracking-[0.1em] text-ink-muted">Donor</th>
@@ -128,7 +128,7 @@ export default async function ClassReportPage({
             <td />
           </tr>
         </tbody>
-      </table>
+      </table></div>
     </div>
   );
 }
@@ -136,7 +136,7 @@ export default async function ClassReportPage({
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="border border-border bg-cream p-4 text-center">
-      <div className="font-display text-[26px] font-semibold text-emerald-900">{value}</div>
+      <div className="font-display text-[22px] font-semibold text-emerald-900 sm:text-[26px]">{value}</div>
       <div className="mt-1 font-sans text-[11px] uppercase tracking-[0.12em] text-ink-muted">
         {label}
       </div>

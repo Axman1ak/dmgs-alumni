@@ -57,7 +57,7 @@ export function ProjectForm({ project }: { project?: Project }) {
           rows={5}
           defaultValue={budgetText}
           placeholder={"Tuition & levies | 750000\nUniforms & books | 300000"}
-          className="field-input font-mono text-[13px]"
+          className="field-input font-mono text-[16px]"
         />
       </div>
 

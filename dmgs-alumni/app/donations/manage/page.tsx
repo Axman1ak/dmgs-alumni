@@ -32,13 +32,13 @@ export default async function ManageProjectsPage() {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-[900px] px-8 py-12">
-        <div className="mb-8 flex items-center justify-between">
+      <main className="mx-auto max-w-[900px] px-5 sm:px-8 py-12">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
             <Link href="/donations" className="font-sans text-[13px] text-emerald-700 hover:underline">
               ← Back to giving
             </Link>
-            <h1 className="mt-2 font-display text-[40px] font-medium text-emerald-900">
+            <h1 className="mt-2 font-display text-[30px] font-medium text-emerald-900 sm:text-[40px]">
               Manage projects
             </h1>
           </div>
@@ -62,7 +62,7 @@ export default async function ManageProjectsPage() {
                 </p>
                 <p className="font-sans text-[12px] text-ink-muted">Goal {ngn(p.goal)}</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Link href={`/donations/projects/${p.slug}`} className="btn btn-outline px-4 py-2 text-[12px]">
                   View
                 </Link>

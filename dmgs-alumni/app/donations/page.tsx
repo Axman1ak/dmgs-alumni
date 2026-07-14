@@ -117,7 +117,7 @@ export default async function DonationsPage() {
         ------------------------------------------------------------------ */}
         {(isSuper || isClassAdmin) && (
           <div className="border-b border-gold-500/30 bg-emerald-900 text-cream">
-            <div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-x-6 gap-y-2 px-8 py-3">
+            <div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-between gap-x-6 gap-y-2 px-5 py-3 sm:px-8">
               <span className="font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-gold-400">
                 Administrator
               </span>
@@ -157,12 +157,12 @@ export default async function DonationsPage() {
           />
           <div aria-hidden className="texture-diagonal absolute inset-0 opacity-60" />
 
-          <div className="relative mx-auto flex max-w-[1100px] flex-wrap items-end justify-between gap-x-10 gap-y-6 px-8 py-12">
+          <div className="relative mx-auto flex max-w-[1100px] flex-wrap items-end justify-between gap-x-10 gap-y-6 px-5 py-10 sm:px-8 sm:py-12">
             <div className="max-w-[560px] animate-fadeIn">
               <p className="mb-3 font-sans text-[11px] uppercase tracking-[0.26em] text-gold-400">
                 The giving campaign
               </p>
-              <h1 className="font-display text-[clamp(34px,5vw,52px)] font-medium leading-[1.0]">
+              <h1 className="font-display text-[clamp(28px,5vw,52px)] font-medium leading-[1.0]">
                 Build the school that built you.
               </h1>
               <p className="mt-4 max-w-[480px] font-serif text-[16px] leading-relaxed text-cream/90">
@@ -201,7 +201,7 @@ export default async function DonationsPage() {
             story for each project lives on its own page ("Read the story").
         ------------------------------------------------------------------ */}
         {(projects.length > 0 || isSuper) && (
-          <div id="causes" className="scroll-mt-24 bg-paper px-8 pt-14">
+          <div id="causes" className="scroll-mt-24 bg-paper px-5 pt-12 sm:px-8 sm:pt-14">
             <div className="mx-auto max-w-[1100px]">
               <SupportedProjects projects={projects} canManage={isSuper} />
             </div>
@@ -215,13 +215,13 @@ export default async function DonationsPage() {
           id="give"
           className="texture-diagonal scroll-mt-24 bg-emerald-900 text-cream"
         >
-          <div className="mx-auto max-w-[1100px] px-8 py-16 lg:py-20">
+          <div className="mx-auto max-w-[1100px] px-5 py-14 sm:px-8 sm:py-16 lg:py-20">
             <Reveal>
               <div className="mx-auto mb-8 max-w-[640px] text-center">
                 <p className="mb-3 font-sans text-[11px] uppercase tracking-[0.26em] text-gold-400">
                   Make your gift
                 </p>
-                <h2 className="font-display text-[clamp(36px,5vw,56px)] font-medium leading-[1.04]">
+                <h2 className="font-display text-[clamp(28px,5vw,56px)] font-medium leading-[1.04]">
                   Put your name in the book.
                 </h2>
                 <p className="mt-5 font-serif text-[17px] leading-relaxed text-cream/85">
@@ -248,7 +248,7 @@ export default async function DonationsPage() {
         {/* ------------------------------------------------------------------
             4 · For the record — class totals and the donation ledger
         ------------------------------------------------------------------ */}
-        <div id="ledger" className="scroll-mt-24 border-t border-border bg-cream/60 px-8 py-14">
+        <div id="ledger" className="scroll-mt-24 border-t border-border bg-cream/60 px-5 py-12 sm:px-8 sm:py-14">
           <div className="mx-auto max-w-[1100px]">
             {/* Fundraising by class - everyone sees aggregate; own class highlighted */}
             {classCards.length > 0 && (
@@ -353,8 +353,10 @@ function DonationTable({ rows, showClass }: { rows: Donation[]; showClass: boole
     );
   }
   return (
-    <div className="overflow-hidden rounded-[2px] border border-border">
-      <table className="w-full border-collapse bg-cream text-left">
+    // overflow-x-auto (not hidden): on a phone the Amount/Date columns were
+    // clipped with no way to reach them.
+    <div className="-mx-5 overflow-x-auto border-y border-border sm:mx-0 sm:rounded-[2px] sm:border-x">
+      <table className="w-full min-w-[560px] border-collapse bg-cream text-left">
         <thead>
           <tr className="bg-emerald-900 text-cream">
             <th className="px-4 py-3 font-sans text-[11px] uppercase tracking-[0.1em]">Donor</th>

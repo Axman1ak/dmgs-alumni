@@ -33,10 +33,10 @@ export default async function ProjectPage({ params }: { params: { slug: string }
       <SiteHeader />
       <main>
         {/* Cinematic hero */}
-        <section className="relative h-[62vh] min-h-[420px] w-full overflow-hidden">
+        <section className="relative h-[42vh] min-h-[300px] sm:h-[62vh] sm:min-h-[420px] w-full overflow-hidden">
           <ProjectArt project={project} className="absolute inset-0 h-full w-full" />
           <div className="absolute inset-0 bg-gradient-to-t from-emerald-900 via-emerald-900/50 to-emerald-900/10" />
-          <div className="absolute inset-x-0 bottom-0 mx-auto max-w-[1100px] px-8 pb-12">
+          <div className="absolute inset-x-0 bottom-0 mx-auto max-w-[1100px] px-5 sm:px-8 pb-12">
             <div className="animate-fadeIn">
               <Link
                 href="/donations"
@@ -47,7 +47,7 @@ export default async function ProjectPage({ params }: { params: { slug: string }
               <p className="mb-2 font-sans text-[12px] font-semibold uppercase tracking-[0.2em] text-gold-400">
                 {project.tag}
               </p>
-              <h1 className="max-w-[820px] font-display text-[clamp(38px,6vw,64px)] font-medium leading-[1.02] text-cream">
+              <h1 className="max-w-[820px] font-display text-[clamp(28px,6vw,64px)] font-medium leading-[1.02] text-cream">
                 {project.title}
               </h1>
               <p className="mt-4 max-w-[560px] font-serif text-[19px] italic text-cream/85">
@@ -57,7 +57,7 @@ export default async function ProjectPage({ params }: { params: { slug: string }
           </div>
         </section>
 
-        <div className="mx-auto max-w-[1100px] px-8">
+        <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
           {/* The idea */}
           <section className="grid gap-10 py-16 lg:grid-cols-[1fr_320px]">
             <div>
@@ -118,7 +118,7 @@ export default async function ProjectPage({ params }: { params: { slug: string }
               <p className="mx-auto mt-3 max-w-[460px] font-serif text-[17px] text-ink-soft">
                 Every gift is credited to your class and recorded in full.
               </p>
-              <Link href="/donations" className="btn btn-primary mt-7 px-8 py-4">
+              <Link href="/donations" className="btn btn-primary mt-7 px-5 sm:px-8 py-4">
                 Make a gift
               </Link>
             </Reveal>

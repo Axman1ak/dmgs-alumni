@@ -43,13 +43,13 @@ export default async function AdminPage() {
     <>
       <SiteHeader />
       <main>
-        <section className="texture-diagonal bg-emerald-900 px-8 py-12 text-cream">
+        <section className="texture-diagonal bg-emerald-900 px-5 sm:px-8 py-12 text-cream">
           <div className="mx-auto flex max-w-[1100px] flex-wrap items-end justify-between gap-6">
             <div>
               <p className="mb-2 font-sans text-[11px] uppercase tracking-[0.2em] text-gold-400">
                 Administration
               </p>
-              <h1 className="font-display text-[44px] font-medium leading-none">
+              <h1 className="font-display text-[32px] font-medium leading-none sm:text-[44px]">
                 Admin panel
               </h1>
             </div>
@@ -66,7 +66,7 @@ export default async function AdminPage() {
           </div>
         </section>
 
-        <div className="mx-auto max-w-[1100px] px-8 py-12">
+        <div className="mx-auto max-w-[1100px] px-5 sm:px-8 py-12">
           {/* Pending approvals */}
           <section className="mb-14">
             <h2 className="mb-5 border-b border-border pb-3 font-display text-[28px] font-medium text-emerald-900">

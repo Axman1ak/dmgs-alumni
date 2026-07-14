@@ -46,7 +46,7 @@ export function EventCard({
 
   return (
     <div
-      className={`grid grid-cols-[110px_1fr] overflow-hidden border border-border bg-cream transition-shadow hover:shadow-soft ${
+      className={`grid grid-cols-[72px_1fr] overflow-hidden border border-border bg-cream transition-shadow hover:shadow-soft sm:grid-cols-[110px_1fr] ${
         cancelled ? "opacity-60" : ""
       }`}
     >
@@ -55,7 +55,7 @@ export function EventCard({
         <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-gold-400">
           {d.month}
         </span>
-        <span className="my-1 font-display text-5xl font-medium leading-none">
+        <span className="my-1 font-display text-4xl font-medium leading-none sm:text-5xl">
           {d.day}
         </span>
         <span className="font-sans text-[11px] tracking-[0.08em] opacity-70">
@@ -64,7 +64,7 @@ export function EventCard({
       </div>
 
       {/* Body */}
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         <div className="mb-2 flex flex-wrap items-center gap-3">
           <span
             className={`inline-block px-2.5 py-1 font-sans text-[10px] font-semibold uppercase tracking-[0.14em] ${
@@ -84,7 +84,7 @@ export function EventCard({
           )}
         </div>
 
-        <h3 className="mb-2 font-display text-[26px] font-semibold text-emerald-900">
+        <h3 className="mb-2 font-display text-[21px] font-semibold text-emerald-900 sm:text-[26px]">
           {event.title}
         </h3>
 

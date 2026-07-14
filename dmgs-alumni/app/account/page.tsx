@@ -34,11 +34,11 @@ export default async function AccountPage() {
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-[760px] px-8 py-14">
+      <main className="mx-auto max-w-[760px] px-5 sm:px-8 py-14">
         <p className="font-sans text-[11px] uppercase tracking-[0.24em] text-gold-500">
           Your account
         </p>
-        <h1 className="mb-8 mt-2 font-display text-[42px] font-medium text-emerald-900">
+        <h1 className="mb-8 mt-2 font-display text-[30px] sm:text-[42px] font-medium text-emerald-900">
           My profile
         </h1>
 
