@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Reveal } from "@/components/donations/Reveal";
@@ -7,13 +8,13 @@ import { createClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 const SCHOOL = "https://www.dohertyijero.com.ng";
-// Hero: the school gate, from the school's own site. Loads reliably.
+// Hero: the school gate. Rendered as a CSS background, loads reliably.
 const HERO_IMG = `${SCHOOL}/wp-content/uploads/entrance.png`;
-// The old lib.png was a 900KB PNG that regularly failed to load on mobile
-// connections, leaving a broken image on the page. This is the same school,
-// served resized by a proper CDN: ~47KB instead of ~894KB.
-const LIB_IMG =
-  "https://static.wixstatic.com/media/2a4bdb_63532e0e7d4c40c58354d4bb9f8c5bd7~mv2.jpg/v1/fill/w_1000,h_750,al_c,q_85,enc_auto/dmgs.jpg";
+// The original library photo. It's a ~900KB PNG that failed to load on mobile
+// connections, so it is rendered through next/image below: Vercel fetches it
+// once, resizes and re-encodes it (WebP), and serves the phone a ~50KB version.
+// Same picture, a fraction of the weight.
+const LIB_IMG = `${SCHOOL}/wp-content/uploads/lib.png`;
 
 const SCHOOL_LINKS = [
   { href: `${SCHOOL}/`, label: "School Home", note: "The official DMGS website" },
@@ -131,12 +132,12 @@ export default async function HomePage() {
               {/* Fixed aspect ratio: without it, a slow or failed image left a
                   huge empty box on mobile instead of a photo. */}
               <div className="relative aspect-[4/3] overflow-hidden border border-border bg-emerald-900 shadow-lg">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={LIB_IMG}
                   alt="Doherty Memorial Grammar School"
-                  loading="lazy"
-                  className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 hover:scale-105"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 600px"
+                  className="object-cover transition-transform duration-700 hover:scale-105"
                 />
                 <span className="absolute bottom-0 left-0 bg-emerald-900/90 px-4 py-2 font-sans text-[11px] uppercase tracking-[0.16em] text-gold-400 backdrop-blur">
                   Ijero-Ekiti, Nigeria
