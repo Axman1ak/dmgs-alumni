@@ -9,7 +9,7 @@ const NAV = [
   { href: "/directory", label: "Directory" },
   { href: "/events", label: "Events" },
   { href: "/messages", label: "Messages" },
-  { href: "/donations", label: "Giving" },
+  { href: "/donations", label: "Donations" },
 ];
 
 export function HeaderNav({

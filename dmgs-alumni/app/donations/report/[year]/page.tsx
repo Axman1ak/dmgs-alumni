@@ -45,7 +45,7 @@ export default async function ClassReportPage({
           You can only view the donation report for the class you administer.
         </p>
         <Link href="/donations" className="btn btn-outline mt-6">
-          Back to giving
+          Back to donations
         </Link>
       </div>
     );
@@ -72,7 +72,7 @@ export default async function ClassReportPage({
     <div className="mx-auto max-w-[820px] px-8 py-12 print:py-0">
       <div className="mb-8 flex items-center justify-between print:hidden">
         <Link href="/donations" className="font-sans text-[13px] text-emerald-700 hover:underline">
-          ← Back to giving
+          ← Back to donations
         </Link>
         <PrintButton />
       </div>

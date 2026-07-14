@@ -11,6 +11,15 @@ import { ngn, shortDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
+// Photographs of the association's own work on campus (from the OSA's North
+// America zone site). Deliberately different from the landing page's imagery so
+// the Donations tab has its own identity. Self-host these in /public when you
+// have the originals.
+const HERO_IMG =
+  "https://static.wixstatic.com/media/2a4bdb_909f206c54af4a2989b7e4a29c5961dc~mv2.jpg";
+const GIVE_IMG =
+  "https://static.wixstatic.com/media/2a4bdb_03f565ac6c974177b445e33a5b5735cf~mv2.jpg";
+
 type Totals = {
   class_year: number;
   label: string;
@@ -139,8 +148,8 @@ export default async function DonationsPage() {
         <section className="relative isolate overflow-hidden bg-emerald-900 text-cream">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://www.dohertyijero.com.ng/wp-content/uploads/entrance.png"
-            alt="The entrance of Doherty Memorial Grammar School, Ijero-Ekiti"
+            src={HERO_IMG}
+            alt="Construction work funded by the Old Students Association at Doherty Memorial Grammar School"
             className="absolute inset-0 -z-10 h-full w-full object-cover"
           />
           <div
@@ -209,7 +218,7 @@ export default async function DonationsPage() {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="https://www.dohertyijero.com.ng/wp-content/uploads/lib.png"
+            src={GIVE_IMG}
             alt=""
             aria-hidden
             className="absolute inset-0 -z-10 h-full w-full object-cover opacity-25"
