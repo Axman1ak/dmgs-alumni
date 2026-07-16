@@ -104,9 +104,6 @@ export default function SignupPage() {
       <form action={action}>
         {/* ---------------- Step 1 — account ---------------- */}
         <div className={step === 1 ? "block" : "hidden"}>
-          <p className="mb-5 font-sans text-[13px] leading-relaxed text-ink-muted">
-            First, the basics. This is what you&rsquo;ll use to sign in.
-          </p>
           <div className="grid grid-cols-1 gap-x-3 sm:grid-cols-2">
             <Field
               name="first_name"
@@ -144,11 +141,6 @@ export default function SignupPage() {
 
         {/* ---------------- Step 2 — directory details ---------------- */}
         <div className={step === 2 ? "block" : "hidden"}>
-          <p className="mb-5 font-sans text-[13px] leading-relaxed text-ink-muted">
-            These details make up your entry in the old students directory. Other
-            approved members will be able to see them.
-          </p>
-
           <div className="mb-5">
             <label htmlFor="class_year" className="field-label">
               Graduating class *
@@ -222,11 +214,6 @@ export default function SignupPage() {
               className="field-input"
             />
           </div>
-
-          <p className="mb-6 font-sans text-[12px] leading-relaxed text-ink-muted">
-            Your request goes to an administrator for review. You&rsquo;ll be able to
-            sign in once it&rsquo;s approved.
-          </p>
         </div>
 
         {/* ---------------- Navigation ---------------- */}
