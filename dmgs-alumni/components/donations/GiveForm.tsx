@@ -29,12 +29,16 @@ export function GiveForm({
   donorName,
   donorYear,
   donorClassLabel,
+  projectId,
+  projectTitle,
 }: {
   me: string;
   userEmail: string;
   donorName: string;
   donorYear: number | null;
   donorClassLabel: string | null;
+  projectId: string;
+  projectTitle: string;
 }) {
   const [amount, setAmount] = useState<number>(25000);
   const [custom, setCustom] = useState("");
@@ -63,6 +67,8 @@ export function GiveForm({
     // gift cannot be forged, misattributed to another class, or self-marked
     // "success". The webhook alone promotes a donation to success.
     const { error } = await supabase.from("donations").insert({
+      kind: "project",
+      project_id: projectId,
       amount: effectiveAmount,
       currency: "NGN",
       is_anonymous: anonymous,
@@ -113,6 +119,7 @@ export function GiveForm({
   return (
     <div className="border border-border bg-cream p-5 sm:p-8">
       <p className="mb-6 font-sans text-[13px] text-ink-muted">
+        Supporting <span className="font-semibold text-emerald-900">{projectTitle}</span>.{" "}
         {donorClassLabel
           ? `Credited to ${donorClassLabel}.`
           : "Credited to your graduating class."}
