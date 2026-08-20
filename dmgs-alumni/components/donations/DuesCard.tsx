@@ -125,19 +125,16 @@ export function DuesCard({
 
       {/* Right: participation + action */}
       <div className="flex flex-col justify-center bg-paper p-7 sm:p-8">
-        {memberCount > 0 && (
-          <>
-            <div className="mb-2 flex justify-between font-sans text-[12px] text-ink-muted">
-              <span>{classLabel ?? "Your class"} paid this year</span>
-              <span>
-                <b className="text-emerald-900">{paidCount}</b> / {memberCount}
-              </span>
-            </div>
-            <div className="h-2 overflow-hidden bg-cream-dark">
-              <div className="h-full bg-success" style={{ width: `${pct}%` }} />
-            </div>
-          </>
-        )}
+        {/* Always shown so members see where their class stands. */}
+        <div className="mb-2 flex justify-between font-sans text-[12px] text-ink-muted">
+          <span>{classLabel ?? "Your class"} paid this year</span>
+          <span>
+            <b className="text-emerald-900">{paidCount}</b> / {memberCount}
+          </span>
+        </div>
+        <div className="h-2 overflow-hidden bg-cream-dark">
+          <div className="h-full bg-success" style={{ width: `${pct}%` }} />
+        </div>
 
         {error && <p className="mt-4 font-sans text-[12px] text-danger">{error}</p>}
 
