@@ -16,17 +16,23 @@ export function HeaderNav({
   signedIn,
   initials,
   isSuperAdmin = false,
+  isAdmin = false,
   pendingCount = 0,
 }: {
   signedIn: boolean;
   initials: string;
   isSuperAdmin?: boolean;
+  isAdmin?: boolean;
   pendingCount?: number;
 }) {
   const pathname = usePathname();
-  const navItems = isSuperAdmin
-    ? [...NAV, { href: "/admin", label: "Admin" }]
-    : NAV;
+  // "Reports" is the admin home for donation totals + the payment ledger; shown
+  // to super admins and class admins. "Admin" (member management) is super only.
+  const navItems = [
+    ...NAV,
+    ...(isAdmin ? [{ href: "/donations/reports", label: "Reports" }] : []),
+    ...(isSuperAdmin ? [{ href: "/admin", label: "Admin" }] : []),
+  ];
   const [menuOpen, setMenuOpen] = useState(false); // user dropdown
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -57,7 +63,16 @@ export function HeaderNav({
     );
   }
 
-  const active = (href: string) => pathname === href || pathname.startsWith(href + "/");
+  const active = (href: string) => {
+    // "Donations" shouldn't light up while on the admin-only "/donations/reports".
+    if (href === "/donations") {
+      return (
+        pathname === "/donations" ||
+        (pathname.startsWith("/donations/") && !pathname.startsWith("/donations/reports"))
+      );
+    }
+    return pathname === href || pathname.startsWith(href + "/");
+  };
 
   return (
     <>

@@ -15,6 +15,7 @@ export async function SiteHeader() {
 
   let initials = "";
   let isSuperAdmin = false;
+  let isAdmin = false;
   let pendingCount = 0;
   if (user) {
     const { data: profile } = await supabase
@@ -23,6 +24,7 @@ export async function SiteHeader() {
       .eq("id", user.id)
       .single();
     isSuperAdmin = profile?.role === "super_admin";
+    isAdmin = isSuperAdmin || profile?.role === "class_admin";
     if (isSuperAdmin) {
       const { count } = await supabase
         .from("profiles")
@@ -69,6 +71,7 @@ export async function SiteHeader() {
             signedIn={Boolean(user)}
             initials={initials}
             isSuperAdmin={isSuperAdmin}
+            isAdmin={isAdmin}
             pendingCount={pendingCount}
           />
         </div>

@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ProjectArt } from "@/components/donations/ProjectArt";
 import { BudgetBreakdown } from "@/components/donations/BudgetBreakdown";
+import { GiveForm } from "@/components/donations/GiveForm";
 import { Reveal } from "@/components/donations/Reveal";
 import { mapProject } from "@/lib/projects";
 import { createClient } from "@/lib/supabase/server";
@@ -13,6 +14,11 @@ export const dynamic = "force-dynamic";
 
 export default async function ProjectPage({ params }: { params: { slug: string } }) {
   const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+
   const { data: row } = await supabase
     .from("projects")
     .select("*")
@@ -20,6 +26,28 @@ export default async function ProjectPage({ params }: { params: { slug: string }
     .maybeSingle();
   if (!row) notFound();
   const project = mapProject(row);
+
+  // Who's giving, and to which class the gift is credited.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, class_year")
+    .eq("id", user.id)
+    .single();
+  const { data: myAlum } = await supabase
+    .from("alumni")
+    .select("class_year")
+    .eq("profile_id", user.id)
+    .maybeSingle();
+  const myYear = myAlum?.class_year ?? profile?.class_year ?? null;
+  let myClassLabel: string | null = null;
+  if (myYear) {
+    const { data: cls } = await supabase
+      .from("classes")
+      .select("label")
+      .eq("year", myYear)
+      .maybeSingle();
+    myClassLabel = cls?.label ?? null;
+  }
 
   const { data: otherRows } = await supabase
     .from("projects")
@@ -87,9 +115,9 @@ export default async function ProjectPage({ params }: { params: { slug: string }
                 <p className="mt-4 border-t border-border pt-4 font-serif text-[15px] italic leading-relaxed text-ink-soft">
                   {project.impact}
                 </p>
-                <Link href="/donations" className="btn btn-gold mt-6 w-full justify-center">
+                <a href="#give" className="btn btn-gold mt-6 w-full justify-center">
                   Support this project
-                </Link>
+                </a>
               </aside>
             </Reveal>
           </section>
@@ -109,18 +137,31 @@ export default async function ProjectPage({ params }: { params: { slug: string }
             </div>
           </section>
 
-          {/* CTA */}
-          <section className="border-t border-border py-16 text-center">
+          {/* Give — directly to this project */}
+          <section id="give" className="scroll-mt-20 border-t border-border py-16">
             <Reveal>
-              <h2 className="mx-auto max-w-[600px] font-display text-[36px] font-medium leading-tight text-emerald-900">
-                Be part of {project.title.toLowerCase()}
-              </h2>
-              <p className="mx-auto mt-3 max-w-[460px] font-serif text-[17px] text-ink-soft">
-                Every gift is credited to your class and recorded in full.
-              </p>
-              <Link href="/donations" className="btn btn-primary mt-7 px-5 sm:px-8 py-4">
-                Make a gift
-              </Link>
+              <div className="mx-auto mb-8 max-w-[600px] text-center">
+                <h2 className="font-display text-[clamp(28px,4.5vw,40px)] font-medium leading-tight text-emerald-900">
+                  Support {project.title.toLowerCase()}
+                </h2>
+                <p className="mx-auto mt-3 max-w-[460px] font-serif text-[17px] text-ink-soft">
+                  Give any amount. It goes to this project, is credited to your
+                  class, and is recorded in full.
+                </p>
+              </div>
+            </Reveal>
+            <Reveal delay={120}>
+              <div className="mx-auto max-w-[600px] border-2 border-gold-500/50 p-2 shadow-lg sm:p-3">
+                <GiveForm
+                  me={user.id}
+                  userEmail={user.email ?? ""}
+                  donorName={profile?.full_name ?? ""}
+                  donorYear={myYear}
+                  donorClassLabel={myClassLabel}
+                  projectId={project.id}
+                  projectTitle={project.title}
+                />
+              </div>
             </Reveal>
           </section>
 
