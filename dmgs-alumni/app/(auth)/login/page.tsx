@@ -5,6 +5,7 @@ import { useFormState } from "react-dom";
 import { login, type AuthState } from "../actions";
 import { AuthCard, FormNotice } from "@/components/auth/AuthCard";
 import { SubmitButton } from "@/components/auth/SubmitButton";
+import { PasswordField } from "@/components/auth/PasswordField";
 
 const initial: AuthState = {};
 
@@ -21,12 +22,13 @@ export default function LoginPage() {
           </label>
           <input id="email" name="email" type="email" autoComplete="email" required className="field-input" />
         </div>
-        <div className="mb-5">
-          <label htmlFor="password" className="field-label">
-            Password
-          </label>
-          <input id="password" name="password" type="password" autoComplete="current-password" required className="field-input" />
-        </div>
+        <PasswordField
+          id="password"
+          name="password"
+          label="Password"
+          autoComplete="current-password"
+          required
+        />
         <SubmitButton>Sign in</SubmitButton>
       </form>
 

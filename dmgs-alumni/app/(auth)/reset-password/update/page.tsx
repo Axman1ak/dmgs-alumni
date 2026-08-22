@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { AuthCard, FormNotice } from "@/components/auth/AuthCard";
+import { PasswordField } from "@/components/auth/PasswordField";
 
 /**
  * Landing page for the password-reset email link. By the time the user reaches
@@ -59,36 +60,26 @@ export default function UpdatePasswordPage() {
       ) : (
         <form onSubmit={onSubmit}>
           {error && <FormNotice tone="error">{error}</FormNotice>}
-          <div className="mb-5">
-            <label htmlFor="password" className="field-label">
-              New password
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="new-password"
-              minLength={8}
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="field-input"
-            />
-          </div>
-          <div className="mb-5">
-            <label htmlFor="confirm" className="field-label">
-              Confirm new password
-            </label>
-            <input
-              id="confirm"
-              type="password"
-              autoComplete="new-password"
-              minLength={8}
-              required
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              className="field-input"
-            />
-          </div>
+          <PasswordField
+            id="password"
+            name="password"
+            label="New password"
+            autoComplete="new-password"
+            minLength={8}
+            required
+            value={password}
+            onChange={setPassword}
+          />
+          <PasswordField
+            id="confirm"
+            name="confirm"
+            label="Confirm new password"
+            autoComplete="new-password"
+            minLength={8}
+            required
+            value={confirm}
+            onChange={setConfirm}
+          />
           <button
             type="submit"
             disabled={busy}

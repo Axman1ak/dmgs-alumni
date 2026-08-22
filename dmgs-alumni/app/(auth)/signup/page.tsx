@@ -6,6 +6,7 @@ import { useFormState } from "react-dom";
 import { signup, type AuthState } from "../actions";
 import { AuthCard, FormNotice } from "@/components/auth/AuthCard";
 import { SubmitButton } from "@/components/auth/SubmitButton";
+import { PasswordField } from "@/components/auth/PasswordField";
 
 const initial: AuthState = {};
 
@@ -128,10 +129,10 @@ export default function SignupPage() {
             value={email}
             onChange={setEmail}
           />
-          <Field
+          <PasswordField
+            id="password"
             name="password"
             label="Password *"
-            type="password"
             autoComplete="new-password"
             value={password}
             onChange={setPassword}
