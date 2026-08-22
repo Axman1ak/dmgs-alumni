@@ -27,10 +27,10 @@ export default async function NewProjectPage() {
         <Link href="/donations/manage" className="font-sans text-[13px] text-emerald-700 hover:underline">
           ← All projects
         </Link>
-        <h1 className="mb-8 mt-2 font-display text-[40px] font-medium text-emerald-900">
+        <h1 className="mb-8 mt-2 font-display text-[30px] font-medium text-emerald-900 sm:text-[40px]">
           New project
         </h1>
-        <ProjectForm />
+        <ProjectForm uid={user.id} />
       </main>
       <SiteFooter />
     </>

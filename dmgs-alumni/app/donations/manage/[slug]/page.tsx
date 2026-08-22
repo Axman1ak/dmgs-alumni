@@ -40,10 +40,10 @@ export default async function EditProjectPage({
         <Link href="/donations/manage" className="font-sans text-[13px] text-emerald-700 hover:underline">
           ← All projects
         </Link>
-        <h1 className="mb-8 mt-2 font-display text-[40px] font-medium text-emerald-900">
+        <h1 className="mb-8 mt-2 font-display text-[30px] font-medium text-emerald-900 sm:text-[40px]">
           Edit project
         </h1>
-        <ProjectForm project={project} />
+        <ProjectForm project={project} uid={user.id} />
       </main>
       <SiteFooter />
     </>

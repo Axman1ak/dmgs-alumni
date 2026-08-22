@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -128,13 +129,21 @@ export default async function DonationsPage() {
         {/* 1 · Projects */}
         <section className="mx-auto max-w-[1160px] px-5 pt-9 sm:px-8">
           <Reveal>
-            <div className="mb-5 flex items-baseline gap-3.5">
+            <div className="mb-5 flex flex-wrap items-baseline gap-3.5">
               <span className="flex h-6 w-6 items-center justify-center bg-gold-500 font-sans text-[12px] font-bold text-emerald-900">
                 1
               </span>
               <h2 className="font-display text-[26px] font-semibold text-emerald-900">
                 Support a project
               </h2>
+              {isSuper && (
+                <Link
+                  href="/donations/manage"
+                  className="ml-auto font-sans text-[13px] font-medium text-emerald-700 hover:underline"
+                >
+                  Manage projects →
+                </Link>
+              )}
             </div>
           </Reveal>
           {projects.length > 0 ? (
