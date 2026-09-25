@@ -36,6 +36,16 @@ export default async function AdminPage() {
     .eq("status", "approved")
     .order("full_name");
 
+  // Unclaimed listings imported from the OSA register. Each pending member is
+  // compared against these so the admin can link them to their existing
+  // listing instead of creating a duplicate.
+  const { data: unclaimed } = await supabase
+    .from("alumni")
+    .select("id, full_name, class_year")
+    .is("profile_id", null)
+    .neq("source", "member");
+  const register = unclaimed ?? [];
+
   const pendingRows = pending ?? [];
   const memberRows = members ?? [];
 
@@ -95,7 +105,7 @@ export default async function AdminPage() {
                         </p>
                       </div>
                       <div className="flex gap-2">
-                        <form action={approveMember}>
+                        <form action={approveMember} id={`approve-${p.id}`}>
                           <input type="hidden" name="id" value={p.id} />
                           <button type="submit" className="btn btn-primary px-5 py-2.5 text-[12px]">
                             Approve
@@ -109,6 +119,11 @@ export default async function AdminPage() {
                         </form>
                       </div>
                     </div>
+
+                    <RegisterMatch
+                      formId={`approve-${p.id}`}
+                      matches={findMatches(p.full_name, p.class_year, register)}
+                    />
 
                     {/* Everything they submitted */}
                     <dl className="mt-4 grid gap-x-8 gap-y-3 border-t border-border pt-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -184,5 +199,92 @@ function Detail({ label, value }: { label: string; value: string | null }) {
         {value || <span className="text-ink-muted">Not given</span>}
       </dd>
     </div>
+  );
+}
+
+type RegisterRow = { id: string; full_name: string; class_year: number | null };
+type Match = RegisterRow & { score: number };
+
+function words(name: string) {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\([^)]*\)/g, " ")
+    .split(/[^a-z]+/)
+    .filter((w) => w.length > 1);
+}
+
+/**
+ * Likely register listings for a new member: surname match is the strongest
+ * signal, then first name, then graduating year. Initials are ignored because
+ * the register often abbreviates middle names.
+ */
+function findMatches(fullName: string, year: number | null, rows: RegisterRow[]): Match[] {
+  const w = words(fullName);
+  if (w.length === 0) return [];
+  const first = w[0];
+  const last = w[w.length - 1];
+  return rows
+    .map((r) => {
+      const rw = words(r.full_name);
+      let score = 0;
+      if (rw.includes(last)) score += 2;
+      if (rw.includes(first)) score += 2;
+      if (year && r.class_year === year) score += 1;
+      return { ...r, score };
+    })
+    .filter((m) => m.score >= 3)
+    .sort((a, b) => b.score - a.score || a.full_name.localeCompare(b.full_name))
+    .slice(0, 5);
+}
+
+function RegisterMatch({ formId, matches }: { formId: string; matches: Match[] }) {
+  if (matches.length === 0) {
+    return (
+      <p className="mt-4 font-sans text-[12px] text-ink-muted">
+        No likely match in the OSA register. Approving creates a new directory listing.
+      </p>
+    );
+  }
+  // Pre-select only a clear winner; ties (e.g. two "Emmanuel Ajayi", 1978)
+  // are left for the admin to decide.
+  const clear = matches[0].score >= 4 && (matches.length === 1 || matches[1].score < matches[0].score);
+  const best = clear ? matches[0].id : "new";
+  return (
+    <fieldset className="mt-4 border border-border bg-paper px-4 py-3">
+      <legend className="px-1 font-sans text-[11px] uppercase tracking-[0.12em] text-ink-muted">
+        Possible match in the OSA register
+      </legend>
+      <div className="space-y-2">
+        {matches.map((m) => (
+          <label key={m.id} className="flex cursor-pointer items-center gap-3 font-sans text-[14px] text-ink">
+            <input
+              type="radio"
+              name="link_alumni_id"
+              value={m.id}
+              form={formId}
+              defaultChecked={m.id === best}
+            />
+            <span>
+              Link to <strong>{m.full_name}</strong>
+              <span className="text-ink-muted">
+                {" "}&middot; {m.class_year ? `Class of ${m.class_year}` : "year unknown"}
+              </span>
+            </span>
+          </label>
+        ))}
+        <label className="flex cursor-pointer items-center gap-3 font-sans text-[14px] text-ink">
+          <input
+            type="radio"
+            name="link_alumni_id"
+            value="new"
+            form={formId}
+            defaultChecked={best === "new"}
+          />
+          <span>Not them, create a new listing</span>
+        </label>
+      </div>
+    </fieldset>
   );
 }

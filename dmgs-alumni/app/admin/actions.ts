@@ -34,8 +34,8 @@ export async function approveMember(formData: FormData) {
     .update({ status: "approved", approved_at: new Date().toISOString(), approved_by: user.id })
     .eq("id", memberId);
 
-  // Put the new member in the directory automatically, using the details they
-  // gave at sign-up. They can enrich it (bio, photo) from their profile page.
+  // Put the new member in the directory, using the details they gave at
+  // sign-up. They can enrich it (bio, photo) from their profile page.
   const { data: existing } = await supabase
     .from("alumni")
     .select("id")
@@ -48,7 +48,35 @@ export async function approveMember(formData: FormData) {
       .select("full_name, occupation, city, state, country, phone, bio, class_year")
       .eq("id", memberId)
       .single();
-    if (p) {
+
+    // If the admin matched this person to an imported register listing, link
+    // that listing to them instead of creating a second one. Only unclaimed
+    // listings can be linked (the .is() guard), so nobody can take over a
+    // listing that already belongs to another member.
+    const linkId = String(formData.get("link_alumni_id") ?? "");
+    let linked = false;
+    if (p && linkId && linkId !== "new") {
+      const { data: updated } = await supabase
+        .from("alumni")
+        .update({
+          profile_id: memberId,
+          full_name: p.full_name,
+          ...(p.class_year ? { class_year: p.class_year } : {}),
+          ...(p.occupation ? { occupation: p.occupation } : {}),
+          ...(p.city ? { city: p.city } : {}),
+          ...(p.state ? { state: p.state } : {}),
+          ...(p.country ? { country: p.country } : {}),
+          ...(p.phone ? { phone: p.phone } : {}),
+          ...(p.bio ? { bio: p.bio } : {}),
+          is_published: true,
+        })
+        .eq("id", linkId)
+        .is("profile_id", null)
+        .select("id");
+      linked = (updated?.length ?? 0) > 0;
+    }
+
+    if (p && !linked) {
       await supabase.from("alumni").insert({
         profile_id: memberId,
         full_name: p.full_name,
@@ -94,6 +122,23 @@ export async function deleteMember(formData: FormData) {
   const admin = createAdminClient();
 
   // Directory listing first (profile_id would otherwise be nulled and orphaned).
+  // Listings imported from the OSA register go back to being unclaimed
+  // register entries (personal details wiped) so the register stays complete.
+  await admin
+    .from("alumni")
+    .update({
+      profile_id: null,
+      occupation: null,
+      city: null,
+      state: null,
+      country: null,
+      phone: null,
+      email: null,
+      bio: null,
+      photo_url: null,
+    })
+    .eq("profile_id", memberId)
+    .neq("source", "member");
   await admin.from("alumni").delete().eq("profile_id", memberId);
 
   // Deleting the auth user cascades to profiles.
