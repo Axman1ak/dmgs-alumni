@@ -137,8 +137,8 @@ export async function login(
   if (error) return { error: error.message };
 
   revalidatePath("/", "layout");
-  // The middleware routes approved users to /directory and unapproved to /pending.
-  redirect("/directory");
+  // The middleware routes approved users to /home and unapproved to /pending.
+  redirect("/home");
 }
 
 export async function signup(
@@ -148,6 +148,7 @@ export async function signup(
   const firstName = String(formData.get("first_name") ?? "").trim();
   const lastName = String(formData.get("last_name") ?? "").trim();
   const fullName = `${firstName} ${lastName}`.trim();
+  const maidenName = String(formData.get("maiden_name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const occupation = String(formData.get("occupation") ?? "").trim();
@@ -173,6 +174,9 @@ export async function signup(
     options: {
       data: {
         full_name: fullName,
+        first_name: firstName,
+        last_name: lastName,
+        maiden_name: maidenName,
         occupation,
         class_year: classYear,
         city,

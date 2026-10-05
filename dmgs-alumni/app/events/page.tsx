@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { EventCard } from "@/components/events/EventCard";
@@ -7,7 +8,8 @@ import type { AlumniEvent } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function EventsPage() {
+export default async function EventsPage({ searchParams }: { searchParams: { tab?: string } }) {
+  const showPast = searchParams.tab === "past";
   const supabase = createClient();
   const {
     data: { user },
@@ -43,71 +45,45 @@ export default async function EventsPage() {
     (e) => new Date(e.starts_at).getTime() < now || e.status === "cancelled",
   );
 
+  past.reverse(); // most recent first
+  const list = showPast ? past : upcoming;
+
   return (
     <>
       <SiteHeader />
-      <main>
-        {/* Hero */}
-        <section className="texture-diagonal bg-emerald-900 px-5 sm:px-8 pb-12 pt-16 text-cream">
-          <div className="mx-auto flex max-w-[1280px] flex-wrap items-end justify-between gap-6">
-            <div>
-              <p className="mb-3 font-sans text-[11px] uppercase tracking-[0.24em] text-gold-400">
-                Gather again
-              </p>
-              <h1 className="font-display text-[34px] font-medium leading-none sm:text-[54px]">
-                Events &amp; Reunions
-              </h1>
-              <p className="mt-3 max-w-[480px] font-serif text-[17px] italic opacity-85">
-                Reunions, virtual meetups, and homecomings, wherever in the
-                world you are.
-              </p>
+      <main className="m-app">
+        <section className="m-page-head tabs">
+          <div className="m-wrap">
+            <h1>Events</h1>
+            <div className="m-tablist" role="tablist">
+              <Link href="/events" role="tab" aria-selected={!showPast}>
+                Upcoming <span className="c">{upcoming.length}</span>
+              </Link>
+              <Link href="/events?tab=past" role="tab" aria-selected={showPast}>
+                Past <span className="c">{past.length}</span>
+              </Link>
             </div>
-            {canManage && <EventForm />}
           </div>
         </section>
 
-        <div className="mx-auto max-w-[1280px] px-5 sm:px-8 py-12">
-          <section className="mb-14">
-            <h2 className="mb-6 border-b border-border pb-3 font-display text-[28px] font-medium text-emerald-900">
-              Upcoming
-            </h2>
-            {upcoming.length === 0 ? (
-              <p className="py-12 text-center font-sans text-[14px] text-ink-muted">
-                No upcoming events yet.
-                {canManage && " Create one with the button above."}
-              </p>
-            ) : (
-              <div className="grid gap-6">
-                {upcoming.map((e) => (
-                  <EventCard
-                    key={e.id}
-                    event={e}
-                    attendeeCount={counts.get(e.id) ?? 0}
-                    isGoing={mine.has(e.id)}
-                    canManage={canManage}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-
-          {past.length > 0 && (
-            <section>
-              <h2 className="mb-6 border-b border-border pb-3 font-display text-[28px] font-medium text-emerald-900">
-                Past &amp; cancelled
-              </h2>
-              <div className="grid gap-6">
-                {past.map((e) => (
-                  <EventCard
-                    key={e.id}
-                    event={e}
-                    attendeeCount={counts.get(e.id) ?? 0}
-                    isGoing={mine.has(e.id)}
-                    canManage={canManage}
-                  />
-                ))}
-              </div>
-            </section>
+        <div className="m-wrap m-body" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          {canManage && !showPast && <EventForm />}
+          {list.length === 0 ? (
+            <div className="m-card m-empty">
+              {showPast ? "No past events yet." : "No upcoming events yet."}
+              {canManage && !showPast && " Create one with the button above."}
+            </div>
+          ) : (
+            list.map((e) => (
+              <EventCard
+                key={e.id}
+                event={e}
+                attendeeCount={counts.get(e.id) ?? 0}
+                isGoing={mine.has(e.id)}
+                canManage={canManage}
+                past={showPast}
+              />
+            ))
           )}
         </div>
       </main>

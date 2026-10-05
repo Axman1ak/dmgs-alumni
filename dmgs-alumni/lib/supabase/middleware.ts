@@ -80,7 +80,7 @@ export async function updateSession(request: NextRequest) {
     // Approved user landing on an auth page -> into the app
     if (approved && (isAuthPage || path === "/pending")) {
       const url = request.nextUrl.clone();
-      url.pathname = "/directory";
+      url.pathname = "/home";
       return NextResponse.redirect(url);
     }
   }

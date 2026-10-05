@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { INDUSTRIES, INTERESTS, safeUrl } from "@/lib/options";
 
 export type FormState = { error?: string; message?: string };
 
@@ -26,28 +27,60 @@ export async function updateMyProfile(
 ): Promise<FormState> {
   const { supabase, user } = await requireUser();
 
-  const full_name = clean(formData.get("full_name"));
-  if (!full_name) return { error: "Name can't be empty." };
+  const first_name = clean(formData.get("first_name"));
+  const last_name = clean(formData.get("last_name"));
+  if (!first_name || !last_name) return { error: "First name and surname are required." };
+
+  const industryRaw = clean(formData.get("industry"));
+  const industry = industryRaw && (INDUSTRIES as readonly string[]).includes(industryRaw) ? industryRaw : null;
+  const interests = formData
+    .getAll("interests")
+    .map((v) => String(v))
+    .filter((v) => (INTERESTS as readonly string[]).includes(v));
+  const connectRaw = clean(formData.get("connect_pref"));
+  const connect_pref = connectRaw && ["mentor", "network", "none"].includes(connectRaw) ? connectRaw : null;
+
+  const linkedinRaw = clean(formData.get("linkedin_url"));
+  const socialRaw = clean(formData.get("social_url"));
+  if (linkedinRaw && !safeUrl(linkedinRaw)) return { error: "That LinkedIn link doesn't look right. Paste the address of your profile page." };
+  if (socialRaw && !safeUrl(socialRaw)) return { error: "That social link doesn't look right. Paste the full address." };
+
+  const email = clean(formData.get("email"));
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { error: "That email address doesn't look right." };
+
+  const full_name = `${first_name} ${last_name}`;
 
   const { error } = await supabase
     .from("alumni")
     .update({
       full_name,
-      occupation: clean(formData.get("occupation")),
-      city: clean(formData.get("city")),
-      state: clean(formData.get("state")),
+      first_name,
+      last_name,
+      maiden_name: clean(formData.get("maiden_name")),
+      former_name: clean(formData.get("former_name")),
       country: clean(formData.get("country")),
-      phone: clean(formData.get("phone")),
-      email: clean(formData.get("email")),
-      bio: clean(formData.get("bio")),
+      state: clean(formData.get("state")),
+      industry,
+      job_title: clean(formData.get("job_title")),
+      employer: clean(formData.get("employer")),
+      interests,
+      connect_pref,
+      linkedin_url: linkedinRaw,
+      social_url: socialRaw,
+      email,
+      email_shared: formData.get("email_shared") === "on" && Boolean(email),
     })
     .eq("profile_id", user.id);
 
   if (error) return { error: error.message };
 
+  // Keep the account name in step with the directory listing.
+  await supabase.from("profiles").update({ full_name, first_name, last_name, maiden_name: clean(formData.get("maiden_name")) }).eq("id", user.id);
+
   revalidatePath("/account");
   revalidatePath("/directory");
-  return { message: "Saved." };
+  revalidatePath("/home");
+  return { message: "Your profile has been saved." };
 }
 
 /** Create a fresh listing owned by the caller. */
@@ -63,9 +96,12 @@ export async function createMyListing(
   const yearRaw = clean(formData.get("class_year"));
   const class_year = yearRaw ? Number(yearRaw) : null;
 
+  const parts = full_name.split(/\s+/);
   const { error } = await supabase.from("alumni").insert({
     profile_id: user.id,
     full_name,
+    first_name: parts.length > 1 ? parts.slice(0, -1).join(" ") : full_name,
+    last_name: parts.length > 1 ? parts[parts.length - 1] : null,
     class_year,
     occupation: clean(formData.get("occupation")),
     city: clean(formData.get("city")),

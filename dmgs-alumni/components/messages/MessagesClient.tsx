@@ -21,7 +21,11 @@ export function MessagesClient({
   isSuperAdmin,
   conversations: initialConversations,
   directory,
+  initialActiveId = null,
+  initialDraft = "",
 }: {
+  initialActiveId?: string | null;
+  initialDraft?: string;
   me: string;
   myName: string;
   isSuperAdmin: boolean;
@@ -30,9 +34,9 @@ export function MessagesClient({
 }) {
   const supabase = useMemo(() => createClient(), []);
   const [conversations, setConversations] = useState<Conversation[]>(initialConversations);
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(initialActiveId);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = useState(initialDraft);
   const [showNew, setShowNew] = useState(false);
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -133,153 +137,146 @@ export function MessagesClient({
     setActiveId(id);
   }
 
-  // 100dvh, not 100vh: on iOS Safari 100vh ignores the address bar and toolbar,
-  // which pushed the message composer below the fold.
-  return (
-    <main className="mx-auto grid h-[calc(100dvh-127px)] max-h-[820px] max-w-[1280px] grid-cols-1 overflow-hidden border-y border-border bg-cream md:mt-4 md:h-[calc(100dvh-160px)] md:grid-cols-[320px_1fr] md:border">
-      {/* Sidebar */}
-      <aside
-        className={`flex flex-col bg-paper md:border-r md:border-border ${
-          activeId ? "hidden md:flex" : "flex"
-        }`}
-      >
-        <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <h2 className="font-display text-[24px] font-semibold text-emerald-900">Messages</h2>
-          <button onClick={() => setShowNew(true)} className="btn btn-gold px-3 py-2 text-[11px]">
-            + New
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto">
-          {conversations.length === 0 ? (
-            <p className="px-5 py-8 text-center font-sans text-[13px] text-ink-muted">
-              No conversations yet. Start one with “+ New”.
-            </p>
-          ) : (
-            conversations.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => openConversation(c.id)}
-                className={`grid w-full grid-cols-[40px_1fr_auto] items-center gap-3 border-b border-border/50 px-5 py-3.5 text-left transition-colors hover:bg-cream-dark ${
-                  activeId === c.id ? "bg-cream-dark" : ""
-                }`}
-              >
-                <span
-                  className={`flex h-10 w-10 items-center justify-center rounded-full font-display text-[15px] font-semibold ${
-                    c.type === "broadcast"
-                      ? "bg-gold-500 text-emerald-900"
-                      : c.type === "group"
-                        ? "bg-gold-500 text-emerald-900"
-                        : "bg-emerald-900 text-gold-400"
-                  }`}
-                >
-                  {c.type === "broadcast" ? "📣" : initials(c.name)}
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate font-display text-[16px] font-semibold text-emerald-900">
-                    {c.name}
-                  </span>
-                  <span className="block truncate font-sans text-[12px] text-ink-muted">
-                    {c.lastMessage ?? "No messages yet"}
-                  </span>
-                </span>
-                {c.unread > 0 && (
-                  <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-gold-500 px-1.5 font-sans text-[11px] font-semibold text-emerald-900">
-                    {c.unread}
-                  </span>
-                )}
-              </button>
-            ))
-          )}
-        </div>
-      </aside>
+  const KIND: Record<Conversation["type"], string> = {
+    broadcast: "Association announcements",
+    group: "Group",
+    direct: "Direct message",
+  };
 
-      {/* Thread */}
-      <section className={`flex flex-col ${activeId ? "flex" : "hidden md:flex"}`}>
-        {active ? (
-          <>
-            <div className="flex items-center gap-3 border-b border-border bg-cream px-5 py-4">
-              <button
-                onClick={() => setActiveId(null)}
-                className="-ml-1 flex h-10 w-10 shrink-0 items-center justify-center font-sans text-[24px] text-ink-muted md:hidden"
-                aria-label="Back"
-              >
-                ‹
+  function when(iso: string | null) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    const today = new Date();
+    if (d.toDateString() === today.toDateString()) return timeOf(iso);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  }
+
+  return (
+    <main className="m-app">
+      <div className="m-wrap m-body">
+        <div className={`m-card m-msgs ${activeId ? "open" : ""}`}>
+          <aside className="m-convos">
+            <div className="top">
+              <h1>Messages</h1>
+              <button type="button" onClick={() => setShowNew(true)} className="m-btn m-btn-line m-btn-sm">
+                New
               </button>
-              <h3 className="font-display text-[20px] font-semibold text-emerald-900">
-                {active.name}
-              </h3>
-              {active.type === "broadcast" && (
-                <span className="font-sans text-[11px] uppercase tracking-[0.1em] text-ink-muted">
-                  {isSuperAdmin ? "You can post" : "Read only"}
-                </span>
+            </div>
+            <div className="list">
+              {conversations.length === 0 ? (
+                <p className="m-empty">No conversations yet. Start one with New, or from a profile in the directory.</p>
+              ) : (
+                conversations.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    className="c"
+                    aria-current={activeId === c.id}
+                    onClick={() => openConversation(c.id)}
+                  >
+                    <span
+                      className="m-avatar"
+                      style={{
+                        width: 40,
+                        height: 40,
+                        fontSize: 14,
+                        flexShrink: 0,
+                        borderRadius: c.type === "direct" ? "50%" : 2,
+                        background: c.type === "broadcast" ? "#c9973f" : c.type === "group" ? "#1f6a52" : "#0e3b2e",
+                        color: c.type === "broadcast" ? "#10231c" : "#fff",
+                      }}
+                    >
+                      {c.type === "broadcast" ? "OSA" : initials(c.name)}
+                    </span>
+                    <span className="meta">
+                      <span className="tp">
+                        <b>{c.name}</b>
+                        <small>{when(c.lastAt)}</small>
+                      </span>
+                      <i>{KIND[c.type]}</i>
+                      <span className="tp">
+                        <span className="pv">{c.lastMessage ?? "No messages yet"}</span>
+                        {c.unread > 0 && <span className="unread">{c.unread}</span>}
+                      </span>
+                    </span>
+                  </button>
+                ))
               )}
             </div>
+          </aside>
 
-            <div className="flex-1 space-y-1 overflow-y-auto bg-paper px-5 py-6">
-              {messages.map((m, i) => {
-                const mine = m.sender_id === me;
-                const showDay =
-                  i === 0 || dayOf(m.created_at) !== dayOf(messages[i - 1].created_at);
-                return (
-                  <div key={m.id}>
-                    {showDay && (
-                      <div className="my-4 text-center font-sans text-[11px] uppercase tracking-[0.1em] text-ink-muted">
-                        {dayOf(m.created_at)}
-                      </div>
-                    )}
-                    <div className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                      <div className={`max-w-[75%] ${mine ? "text-right" : "text-left"}`}>
-                        {!mine && active.type !== "direct" && (
-                          <span className="mb-0.5 block font-sans text-[11px] text-ink-muted">
-                            {nameMap.get(m.sender_id ?? "") ?? "Member"}
-                          </span>
-                        )}
-                        <span
-                          className={`inline-block break-words rounded-lg px-3.5 py-2 text-[15px] ${
-                            mine
-                              ? "bg-emerald-900 text-cream"
-                              : "border border-border bg-cream text-ink"
-                          }`}
-                        >
-                          {m.body}
-                        </span>
-                        <span className="mt-0.5 block font-sans text-[10px] text-ink-muted">
-                          {timeOf(m.created_at)}
-                        </span>
-                      </div>
-                    </div>
+          <section className="m-thread">
+            {active ? (
+              <>
+                <div className="top">
+                  <button type="button" className="back" onClick={() => setActiveId(null)} aria-label="Back to conversations">
+                    ‹
+                  </button>
+                  <div>
+                    <h2>{active.name}</h2>
+                    <span style={{ fontSize: 13, color: "var(--m-muted)" }}>
+                      {active.type === "broadcast" ? (isSuperAdmin ? "Announcements · you can post" : "Announcements") : KIND[active.type]}
+                    </span>
                   </div>
-                );
-              })}
-              <div ref={bottomRef} />
-            </div>
+                </div>
 
-            {readOnly ? (
-              <div className="border-t border-border bg-cream px-5 py-4 text-center font-sans text-[13px] text-ink-muted">
-                Only administrators can post to the announcements channel.
-              </div>
+                <div className="list">
+                  {messages.length === 0 && (
+                    <p style={{ color: "var(--m-muted)" }}>
+                      {active.type === "direct"
+                        ? `Start your conversation with ${active.name.split(" ")[0]}. Messages stay on the site; your email is never shown.`
+                        : "No messages yet."}
+                    </p>
+                  )}
+                  {messages.map((m, i) => {
+                    const mine = m.sender_id === me;
+                    const showDay = i === 0 || dayOf(m.created_at) !== dayOf(messages[i - 1].created_at);
+                    return (
+                      <div key={m.id} style={{ display: "contents" }}>
+                        {showDay && (
+                          <div style={{ textAlign: "center", fontSize: 12, fontWeight: 700, color: "var(--m-faint)", textTransform: "uppercase", letterSpacing: ".08em" }}>
+                            {dayOf(m.created_at)}
+                          </div>
+                        )}
+                        <div className={`m-bubble ${mine ? "me" : ""}`}>
+                          <small>
+                            {mine ? "You" : nameMap.get(m.sender_id ?? "") ?? "Member"} · {timeOf(m.created_at)}
+                          </small>
+                          <div>{m.body}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <div ref={bottomRef} />
+                </div>
+
+                {readOnly ? (
+                  <div className="m-readonly">Only association administrators can post announcements.</div>
+                ) : (
+                  <form onSubmit={send} className="m-compose">
+                    <label className="m-sr" htmlFor="msg">Message</label>
+                    <input
+                      id="msg"
+                      className="m-input"
+                      value={draft}
+                      onChange={(e) => setDraft(e.target.value)}
+                      placeholder="Write a message"
+                      autoComplete="off"
+                    />
+                    <button type="submit" disabled={sending || !draft.trim()} className="m-btn m-btn-primary">
+                      Send
+                    </button>
+                  </form>
+                )}
+              </>
             ) : (
-              <form onSubmit={send} className="flex gap-3 border-t border-border bg-cream px-5 py-4">
-                <input
-                  value={draft}
-                  onChange={(e) => setDraft(e.target.value)}
-                  placeholder="Write a message…"
-                  className="field-input flex-1"
-                />
-                <button type="submit" disabled={sending} className="btn btn-primary disabled:opacity-60">
-                  Send
-                </button>
-              </form>
+              <div className="m-empty" style={{ margin: "auto" }}>
+                Select a conversation, or start a new one.
+              </div>
             )}
-          </>
-        ) : (
-          <div className="flex flex-1 items-center justify-center px-6 text-center">
-            <p className="font-display text-[22px] text-ink-soft">
-              Select a conversation, or start a new one.
-            </p>
-          </div>
-        )}
-      </section>
+          </section>
+        </div>
+      </div>
 
       {showNew && (
         <NewConversation

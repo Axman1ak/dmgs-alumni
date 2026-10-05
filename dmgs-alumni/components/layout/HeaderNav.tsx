@@ -6,10 +6,11 @@ import { usePathname } from "next/navigation";
 import { signOut } from "@/app/(auth)/actions";
 
 const NAV = [
+  { href: "/home", label: "Home" },
+  { href: "/donations", label: "Give" },
   { href: "/directory", label: "Directory" },
   { href: "/events", label: "Events" },
   { href: "/messages", label: "Messages" },
-  { href: "/donations", label: "Donations" },
 ];
 
 export function HeaderNav({
@@ -18,36 +19,28 @@ export function HeaderNav({
   isSuperAdmin = false,
   isAdmin = false,
   pendingCount = 0,
+  unread = 0,
 }: {
   signedIn: boolean;
   initials: string;
   isSuperAdmin?: boolean;
   isAdmin?: boolean;
   pendingCount?: number;
+  unread?: number;
 }) {
   const pathname = usePathname();
-  // "Reports" is the admin home for donation totals + the payment ledger; shown
-  // to super admins and class admins. "Admin" (member management) is super only.
-  const navItems = [
-    ...NAV,
-    ...(isAdmin ? [{ href: "/donations/reports", label: "Reports" }] : []),
-    ...(isSuperAdmin ? [{ href: "/admin", label: "Admin" }] : []),
-  ];
-  const [menuOpen, setMenuOpen] = useState(false); // user dropdown
+  const [menuOpen, setMenuOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
     };
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
-  // Close menus on navigation.
   useEffect(() => {
     setMobileOpen(false);
     setMenuOpen(false);
@@ -55,120 +48,91 @@ export function HeaderNav({
 
   if (!signedIn) {
     return (
-      <nav className="ml-auto flex items-center">
-        <Link href="/login" className="btn btn-primary">
-          Member sign in
-        </Link>
+      <nav style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
+        <Link href="/login" className="m-btn m-btn-line m-btn-sm">Sign in</Link>
+        <Link href="/signup" className="m-btn m-btn-primary m-btn-sm"><span className="m-join-long">Become a member</span><span className="m-join-short">Join</span></Link>
       </nav>
     );
   }
 
+  // Super admins manage members; class admins only see giving reports.
+  const manageHref = isSuperAdmin ? "/admin" : isAdmin ? "/donations/reports" : null;
+  const onManage = pathname.startsWith("/admin") || pathname.startsWith("/donations/reports") || pathname.startsWith("/donations/manage");
+
   const active = (href: string) => {
-    // "Donations" shouldn't light up while on the admin-only "/donations/reports".
-    if (href === "/donations") {
-      return (
-        pathname === "/donations" ||
-        (pathname.startsWith("/donations/") && !pathname.startsWith("/donations/reports"))
-      );
-    }
+    if (href === "/donations") return pathname.startsWith("/donations") && !onManage;
     return pathname === href || pathname.startsWith(href + "/");
   };
 
+  const count = (href: string) =>
+    href === "/messages" && unread > 0 ? (
+      <span className="m-badge" aria-label={`${unread} unread`}>{unread > 99 ? "99+" : unread}</span>
+    ) : null;
+
   return (
     <>
-      {/* Desktop nav */}
-      <nav className="ml-auto hidden items-center gap-1 md:flex">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`relative rounded px-4 py-2.5 font-sans text-[13px] font-medium uppercase tracking-[0.04em] transition-colors ${
-              active(item.href) ? "text-emerald-900" : "text-ink-soft hover:text-emerald-900"
-            }`}
-          >
+      <nav className="m-nav" aria-label="Member">
+        {NAV.map((item) => (
+          <Link key={item.href} href={item.href} className={active(item.href) ? "on" : ""} aria-current={active(item.href) ? "page" : undefined}>
             {item.label}
-            {item.href === "/admin" && pendingCount > 0 && (
-              <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold text-cream">
-                {pendingCount}
-              </span>
-            )}
+            {count(item.href)}
           </Link>
         ))}
-
-        {/* User dropdown */}
-        <div className="relative ml-2" ref={menuRef}>
-          <button
-            onClick={() => setMenuOpen((o) => !o)}
-            className="flex items-center gap-2.5 rounded-full bg-emerald-900 py-1.5 pl-3.5 pr-1.5 font-sans text-[13px] text-cream"
-          >
-            {initials || "-"}
-            <span className="flex h-[30px] w-[30px] items-center justify-center rounded-full bg-gold-500 text-[12px] font-semibold text-emerald-900">
-              {initials || "?"}
-            </span>
-          </button>
-          {menuOpen && (
-            <div className="absolute right-0 top-[calc(100%+8px)] w-48 overflow-hidden rounded border border-border bg-cream shadow-lg">
-              <Link
-                href="/account"
-                className="block px-4 py-3 font-sans text-[13px] text-ink-soft hover:bg-cream-dark hover:text-emerald-900"
-              >
-                My profile
-              </Link>
-              <form action={signOut} className="border-t border-border">
-                <button
-                  type="submit"
-                  className="block w-full px-4 py-3 text-left font-sans text-[13px] text-danger hover:bg-cream-dark"
-                >
-                  Sign out
-                </button>
-              </form>
-            </div>
-          )}
-        </div>
       </nav>
 
-      {/* Mobile hamburger */}
-      <button
-        onClick={() => setMobileOpen((o) => !o)}
-        aria-label="Menu"
-        className="ml-auto flex h-10 w-10 items-center justify-center md:hidden"
-      >
-        <div className="space-y-1.5">
-          <span className={`block h-0.5 w-6 bg-emerald-900 transition-transform ${mobileOpen ? "translate-y-2 rotate-45" : ""}`} />
-          <span className={`block h-0.5 w-6 bg-emerald-900 transition-opacity ${mobileOpen ? "opacity-0" : ""}`} />
-          <span className={`block h-0.5 w-6 bg-emerald-900 transition-transform ${mobileOpen ? "-translate-y-2 -rotate-45" : ""}`} />
-        </div>
+      {manageHref && (
+        <Link href={manageHref} className="m-manage" style={onManage ? { borderColor: "var(--m-emerald)", color: "var(--m-emerald)" } : undefined}>
+          Manage
+          {pendingCount > 0 && <span className="m-badge">{pendingCount}</span>}
+        </Link>
+      )}
+
+      <div className="m-user" ref={menuRef} style={{ position: "relative" }}>
+        <button
+          type="button"
+          onClick={() => setMenuOpen((o) => !o)}
+          aria-expanded={menuOpen}
+          aria-label="Account menu"
+          className="m-avatar"
+          style={{ width: 40, height: 40, fontSize: 15, border: 0, cursor: "pointer" }}
+        >
+          {initials || "?"}
+        </button>
+        {menuOpen && (
+          <div className="m-menu">
+            <Link href="/account">My profile</Link>
+            <form action={signOut} style={{ borderTop: "1px solid var(--m-line)" }}>
+              <button type="submit" style={{ color: "#8a2a2a" }}>Sign out</button>
+            </form>
+          </div>
+        )}
+      </div>
+
+      <button type="button" className="m-burger" onClick={() => setMobileOpen((o) => !o)} aria-expanded={mobileOpen} aria-label="Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+          <path d={mobileOpen ? "M6 6l12 12M18 6L6 18" : "M4 7h16M4 12h16M4 17h16"} />
+        </svg>
       </button>
 
-      {/* Mobile panel */}
       {mobileOpen && (
-        <div className="absolute inset-x-0 top-full border-b border-border bg-cream shadow-lg md:hidden">
-          <nav className="flex flex-col px-6 py-3">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`border-b border-border/60 py-3.5 font-sans text-[14px] uppercase tracking-[0.04em] ${
-                  active(item.href) ? "text-emerald-900" : "text-ink-soft"
-                }`}
-              >
+        <div className="m-mobile" style={{ position: "absolute", left: 0, right: 0, top: "100%", boxShadow: "0 12px 30px rgba(16,35,28,.12)" }}>
+          <div className="m-wrap" style={{ paddingBlock: 8 }}>
+            {NAV.map((item) => (
+              <Link key={item.href} href={item.href} style={active(item.href) ? { color: "var(--m-emerald)" } : undefined}>
                 {item.label}
-                {item.href === "/admin" && pendingCount > 0 && (
-                  <span className="ml-2 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-semibold text-cream">
-                    {pendingCount}
-                  </span>
-                )}
+                {count(item.href)}
               </Link>
             ))}
-            <Link href="/account" className="border-b border-border/60 py-3.5 font-sans text-[14px] uppercase tracking-[0.04em] text-ink-soft">
-              My profile
-            </Link>
+            {manageHref && (
+              <Link href={manageHref}>
+                Manage {pendingCount > 0 && <span className="m-badge">{pendingCount}</span>}
+              </Link>
+            )}
+            <Link href="/account">My profile</Link>
             <form action={signOut}>
-              <button type="submit" className="w-full py-3.5 text-left font-sans text-[14px] uppercase tracking-[0.04em] text-danger">
-                Sign out
-              </button>
+              <button type="submit" style={{ color: "#8a2a2a", borderBottom: 0 }}>Sign out</button>
             </form>
-          </nav>
+          </div>
         </div>
       )}
     </>

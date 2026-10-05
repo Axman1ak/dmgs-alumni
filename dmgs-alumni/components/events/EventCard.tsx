@@ -1,6 +1,6 @@
 "use client";
 
-import { useFormState } from "react-dom";
+import { useFormState, useFormStatus } from "react-dom";
 import type { AlumniEvent } from "@/lib/types";
 import { rsvp, cancelEvent, type EventState } from "@/app/events/actions";
 
@@ -8,13 +8,12 @@ const initial: EventState = {};
 
 const FORMAT_LABEL: Record<AlumniEvent["format"], string> = {
   in_person: "In person",
-  virtual: "Virtual",
+  virtual: "Online",
   hybrid: "Hybrid",
 };
 
 // Format in a fixed timezone (WAT, Nigeria) so server-rendered HTML matches the
-// client render regardless of the viewer's locale — avoids hydration mismatch
-// and a wrong day/time flash.
+// client render regardless of the viewer's locale.
 const TZ = "Africa/Lagos";
 
 function dateParts(iso: string) {
@@ -24,8 +23,17 @@ function dateParts(iso: string) {
     day: Number(d.toLocaleDateString("en-US", { day: "numeric", timeZone: TZ })),
     year: Number(d.toLocaleDateString("en-US", { year: "numeric", timeZone: TZ })),
     time: d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: TZ }),
-    weekday: d.toLocaleDateString("en-US", { weekday: "long", timeZone: TZ }),
+    weekday: d.toLocaleDateString("en-US", { weekday: "short", timeZone: TZ }),
   };
+}
+
+function Pending({ idle, busy, className }: { idle: string; busy: string; className: string }) {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" disabled={pending} className={className}>
+      {pending ? busy : idle}
+    </button>
+  );
 }
 
 export function EventCard({
@@ -33,118 +41,76 @@ export function EventCard({
   attendeeCount,
   isGoing,
   canManage,
+  past = false,
 }: {
   event: AlumniEvent;
   attendeeCount: number;
   isGoing: boolean;
   canManage: boolean;
+  past?: boolean;
 }) {
   const [rsvpState, rsvpAction] = useFormState(rsvp, initial);
   const [cancelState, cancelAction] = useFormState(cancelEvent, initial);
   const d = dateParts(event.starts_at);
   const cancelled = event.status === "cancelled";
+  const others = Math.max(0, attendeeCount - (isGoing ? 1 : 0));
 
   return (
-    <div
-      className={`grid grid-cols-[72px_1fr] overflow-hidden border border-border bg-cream transition-shadow hover:shadow-soft sm:grid-cols-[110px_1fr] ${
-        cancelled ? "opacity-60" : ""
-      }`}
-    >
-      {/* Date block */}
-      <div className="flex flex-col justify-center border-r-4 border-gold-500 bg-emerald-900 px-3 py-6 text-center text-cream">
-        <span className="font-sans text-[11px] uppercase tracking-[0.2em] text-gold-400">
-          {d.month}
-        </span>
-        <span className="my-1 font-display text-4xl font-medium leading-none sm:text-5xl">
-          {d.day}
-        </span>
-        <span className="font-sans text-[11px] tracking-[0.08em] opacity-70">
-          {d.year}
-        </span>
+    <article className={`m-card m-ev ${past || cancelled ? "past" : ""}`}>
+      <div className="d">
+        <span className="mo">{d.month}</span>
+        <span className="n">{d.day}</span>
+        <span className="w">{d.year}</span>
       </div>
-
-      {/* Body */}
-      <div className="p-4 sm:p-6">
-        <div className="mb-2 flex flex-wrap items-center gap-3">
-          <span
-            className={`inline-block px-2.5 py-1 font-sans text-[10px] font-semibold uppercase tracking-[0.14em] ${
-              event.format === "in_person"
-                ? "bg-emerald-800 text-gold-400"
-                : event.format === "virtual"
-                  ? "bg-gold-500/15 text-gold-500"
-                  : "bg-emerald-700/15 text-emerald-800"
-            }`}
-          >
-            {FORMAT_LABEL[event.format]}
+      <div className="i">
+        <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+          <span className="m-fmt">{FORMAT_LABEL[event.format]}</span>
+          <span style={{ fontSize: 13, color: "var(--m-muted)" }}>
+            {d.weekday} · {d.time} WAT
           </span>
           {cancelled && (
-            <span className="font-sans text-[11px] font-semibold uppercase tracking-[0.1em] text-danger">
+            <span className="m-pill" style={{ color: "#8a2a2a" }}>
+              <span className="m-dot" />
               Cancelled
             </span>
           )}
         </div>
-
-        <h3 className="mb-2 font-display text-[21px] font-semibold text-emerald-900 sm:text-[26px]">
-          {event.title}
-        </h3>
-
-        <div className="mb-3 flex flex-wrap gap-4 font-sans text-[12px] tracking-[0.04em] text-ink-muted">
-          <span>
-            {d.weekday}, {d.time}
-          </span>
-          {event.location && <span>{event.location}</span>}
-          <span>
-            {attendeeCount} {attendeeCount === 1 ? "attendee" : "attendees"}
-          </span>
-        </div>
-
-        {event.description && (
-          <p className="mb-4 text-[15px] leading-relaxed text-ink-soft">
-            {event.description}
-          </p>
+        <h2>{event.title}</h2>
+        {event.location && <span style={{ color: "#4d5358", fontSize: 15 }}>{event.location}</span>}
+        {event.description && <p className="desc">{event.description}</p>}
+        {(rsvpState.error || cancelState.error) && <p className="m-error">{rsvpState.error || cancelState.error}</p>}
+      </div>
+      <div className="r">
+        <span style={{ fontSize: 14, color: "var(--m-muted)" }}>
+          {isGoing
+            ? others > 0
+              ? `You and ${others} ${others === 1 ? "other" : "others"} ${past ? "went" : "are going"}`
+              : past ? "You went" : "You are going"
+            : `${attendeeCount} ${past ? "went" : "going"}`}
+        </span>
+        {!cancelled && !past && (
+          <form action={rsvpAction}>
+            <input type="hidden" name="event_id" value={event.id} />
+            <input type="hidden" name="going" value={(!isGoing).toString()} />
+            <Pending
+              idle={isGoing ? "Going ✓" : "I'll attend"}
+              busy="Saving…"
+              className={`m-btn m-btn-block ${isGoing ? "m-btn-line" : "m-btn-primary"}`}
+            />
+          </form>
         )}
-
-        {(rsvpState.error || cancelState.error) && (
-          <p className="mb-3 font-sans text-[12px] text-danger">
-            {rsvpState.error || cancelState.error}
-          </p>
+        {!cancelled && !past && event.zoom_url && event.format !== "in_person" && (
+          <a href={event.zoom_url} target="_blank" rel="noopener noreferrer" className="m-link" style={{ fontSize: 14 }}>
+            Join link
+          </a>
         )}
-
-        {!cancelled && (
-          <div className="flex flex-wrap items-center gap-3">
-            <form action={rsvpAction}>
-              <input type="hidden" name="event_id" value={event.id} />
-              <input type="hidden" name="going" value={(!isGoing).toString()} />
-              <button
-                type="submit"
-                className={isGoing ? "btn btn-outline" : "btn btn-primary"}
-              >
-                {isGoing ? "Cancel RSVP" : "RSVP, I'll be there"}
-              </button>
-            </form>
-
-            {event.zoom_url && (event.format === "virtual" || event.format === "hybrid") && (
-              <a
-                href={event.zoom_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-gold"
-              >
-                Join link
-              </a>
-            )}
-
-            {canManage && (
-              <form action={cancelAction} className="ml-auto">
-                <input type="hidden" name="event_id" value={event.id} />
-                <button type="submit" className="btn btn-danger">
-                  Cancel event
-                </button>
-              </form>
-            )}
-          </div>
+        {canManage && !cancelled && !past && (
+          <form action={cancelAction} style={{ color: "#8a2a2a" }}>
+            <input type="hidden" name="event_id" value={event.id} />
+            <Pending idle="Cancel event" busy="Cancelling…" className="m-link" />
+          </form>
         )}
       </div>
-    </div>
+    </article>
   );
 }

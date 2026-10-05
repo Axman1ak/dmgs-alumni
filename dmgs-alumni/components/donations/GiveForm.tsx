@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-const PRESETS = [5000, 25000, 100000];
+const PRESETS = [5000, 10000, 25000, 50000];
 const PUBLIC_KEY = process.env.NEXT_PUBLIC_PAYSTACK_PUBLIC_KEY;
 
 declare global {
@@ -92,7 +92,7 @@ export function GiveForm({
         metadata: { class_year: donorYear, donor: me },
         callback: () => {
           setStatus("success");
-          setMessage("Thank you for your gift! Your payment is being confirmed.");
+          setMessage(`Your gift to ${projectTitle} was received and is being confirmed. A receipt is on its way to your email.`);
         },
         onClose: () => setBusy(false),
       });
@@ -107,89 +107,71 @@ export function GiveForm({
 
   if (status === "success") {
     return (
-      <div className="border border-border bg-cream p-8 text-center">
-        <h3 className="mb-2 font-display text-[28px] font-semibold text-emerald-900">
-          Thank you
-        </h3>
-        <p className="text-[15px] text-ink-soft">{message}</p>
-      </div>
+      <>
+        <p className="m-toast">
+          Thank you{donorName ? `, ${donorName.split(" ")[0]}` : ""}. {message}
+        </p>
+        <button type="button" className="m-btn m-btn-line m-btn-block" onClick={() => { setStatus("idle"); setMessage(null); }}>
+          Give again
+        </button>
+      </>
     );
   }
 
   return (
-    <div className="border border-border bg-cream p-5 sm:p-8">
-      <p className="mb-6 font-sans text-[13px] text-ink-muted">
-        Supporting <span className="font-semibold text-emerald-900">{projectTitle}</span>.{" "}
-        {donorClassLabel
-          ? `Credited to ${donorClassLabel}.`
-          : "Credited to your graduating class."}
-      </p>
-
+    <div style={{ borderTop: "1px solid var(--m-line)", paddingTop: 18, display: "flex", flexDirection: "column", gap: 14 }}>
       {!configured && (
-        <div className="mb-6 rounded-sm border-l-[3px] border-gold-500 bg-gold-500/10 px-4 py-3 text-[13px] text-ink-soft">
-          Online giving opens as soon as the association&rsquo;s Paystack account
-          is approved. The form is ready and waiting.
-        </div>
+        <p style={{ fontSize: 14, color: "#4d5358", borderLeft: "3px solid var(--m-gold)", paddingLeft: 12 }}>
+          Online giving opens as soon as the association&rsquo;s Paystack account is approved.
+        </p>
       )}
-
-      <div className="mb-5 grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-3">
+      <b>Choose an amount</b>
+      <div className="m-amts">
         {PRESETS.map((p) => (
           <button
             key={p}
             type="button"
+            aria-pressed={!custom && amount === p}
             onClick={() => {
               setAmount(p);
               setCustom("");
             }}
-            className={`rounded-sm border px-2 py-3.5 font-sans text-[13px] transition-colors sm:text-[14px] ${
-              !custom && amount === p
-                ? "border-emerald-700 bg-emerald-900 text-cream"
-                : "border-border bg-paper text-ink-soft hover:border-emerald-700"
-            }`}
           >
             ₦{p.toLocaleString()}
           </button>
         ))}
       </div>
-
-      <div className="mb-5">
-        <label className="field-label" htmlFor="custom">Or a custom amount (₦)</label>
+      <div className="m-field">
+        <label htmlFor="custom" style={{ fontWeight: 500, color: "var(--m-muted)" }}>Or another amount (₦)</label>
         <input
           id="custom"
+          className="m-input"
           type="number"
+          inputMode="numeric"
           min={100}
           value={custom}
           onChange={(e) => setCustom(e.target.value)}
-          placeholder="e.g. 50000"
-          className="field-input"
+          placeholder="e.g. 15000"
         />
       </div>
-
-      <label className="mb-6 flex items-center gap-2.5 font-sans text-[13px] text-ink-soft">
-        <input
-          type="checkbox"
-          className="h-5 w-5 shrink-0"
-          checked={anonymous}
-          onChange={(e) => setAnonymous(e.target.checked)}
-        />
-        Give anonymously
+      <label className="m-check">
+        <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
+        Give anonymously (hide my name from other members)
       </label>
-
-      {message && status === "error" && (
-        <p className="mb-4 font-sans text-[12px] text-danger">{message}</p>
-      )}
-
+      <span style={{ fontSize: 13, color: "var(--m-muted)" }}>
+        {donorClassLabel ? `Credited to ${donorClassLabel}.` : "Credited to your graduating class."}
+      </span>
+      {message && <p className="m-error">{message}</p>}
       <button
+        type="button"
         onClick={give}
         disabled={!configured || busy}
-        className="btn btn-gold w-full justify-center py-3.5 disabled:opacity-50"
+        className="m-btn m-btn-gold m-btn-block"
+        style={{ minHeight: 56 }}
       >
-        {!configured
-          ? "Giving opens soon"
-          : busy
-            ? "Processing…"
-            : `Give ₦${(effectiveAmount || 0).toLocaleString()}`}
+        {!configured ? "Giving opens soon" : busy ? "Processing…" : `Give ₦${(effectiveAmount || 0).toLocaleString()}`}
       </button>
+      <span className="m-secure">Card or bank transfer in naira · secured by Paystack</span>
     </div>
   );
 }

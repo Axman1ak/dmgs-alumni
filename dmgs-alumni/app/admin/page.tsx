@@ -1,14 +1,16 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { MemberRow } from "@/components/admin/MemberRow";
 import { createClient } from "@/lib/supabase/server";
 import { approveMember, rejectMember } from "./actions";
-import { shortDate } from "@/lib/format";
+import { ngn, shortDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminPage() {
+export default async function AdminPage({ searchParams }: { searchParams: { tab?: string } }) {
+  const tab = searchParams.tab === "members" ? "members" : "approvals";
   const supabase = createClient();
   const {
     data: { user },
@@ -32,7 +34,7 @@ export default async function AdminPage() {
 
   const { data: members } = await supabase
     .from("profiles")
-    .select("id, full_name, email, role, class_year, admin_of_year")
+    .select("id, full_name, email, role, class_year, admin_of_year, approved_at")
     .eq("status", "approved")
     .order("full_name");
 
@@ -49,139 +51,145 @@ export default async function AdminPage() {
   const pendingRows = pending ?? [];
   const memberRows = members ?? [];
 
+  // This year at a glance (super admins can read every donation).
+  const year = new Date().getFullYear();
+  const [{ data: gifts }, { data: projects }] = await Promise.all([
+    supabase
+      .from("donations")
+      .select("id, amount, kind, donor_name, donor_profile_id, is_anonymous, project_id, period_year, created_at")
+      .eq("status", "success")
+      .gte("created_at", `${year}-01-01`)
+      .order("created_at", { ascending: false }),
+    supabase.from("projects").select("id, title"),
+  ]);
+  const giftRows = gifts ?? [];
+  const givenThisYear = giftRows.reduce((s, g) => s + Number(g.amount), 0);
+  const donors = new Set(giftRows.map((g) => g.donor_profile_id).filter(Boolean)).size;
+  const duesPayers = new Set(giftRows.filter((g) => g.kind === "dues" && g.period_year === year).map((g) => g.donor_profile_id)).size;
+  const monthStart = new Date(year, new Date().getMonth(), 1).toISOString();
+  const newThisMonth = memberRows.filter((m) => m.approved_at && m.approved_at >= monthStart).length;
+  const titleById = new Map((projects ?? []).map((p) => [p.id, p.title as string]));
+
+  const tabs: [string, string, number | null][] = [
+    ["/admin", "Approvals", pendingRows.length],
+    ["/admin?tab=members", "Members & roles", memberRows.length],
+  ];
+
   return (
     <>
       <SiteHeader />
-      <main>
-        <section className="texture-diagonal bg-emerald-900 px-5 sm:px-8 py-12 text-cream">
-          <div className="mx-auto flex max-w-[1100px] flex-wrap items-end justify-between gap-6">
-            <div>
-              <p className="mb-2 font-sans text-[11px] uppercase tracking-[0.2em] text-gold-400">
-                Administration
-              </p>
-              <h1 className="font-display text-[32px] font-medium leading-none sm:text-[44px]">
-                Admin panel
-              </h1>
-            </div>
-            <div className="flex gap-8 text-right">
-              <div>
-                <div className="font-display text-[34px] text-gold-400">{pendingRows.length}</div>
-                <div className="font-sans text-[11px] uppercase tracking-[0.12em] opacity-80">Pending</div>
-              </div>
-              <div>
-                <div className="font-display text-[34px] text-gold-400">{memberRows.length}</div>
-                <div className="font-sans text-[11px] uppercase tracking-[0.12em] opacity-80">Members</div>
-              </div>
+      <main className="m-app">
+        <section className="m-page-head tabs">
+          <div className="m-wrap">
+            <h1>Manage</h1>
+            <div className="m-tablist" role="tablist">
+              {tabs.map(([href, label, c], i) => (
+                <Link key={href} href={href} role="tab" aria-selected={(i === 0) === (tab === "approvals")}>
+                  {label} {c !== null && <span className="c">{c}</span>}
+                </Link>
+              ))}
+              <Link href="/donations/reports" role="tab" aria-selected={false}>Giving reports</Link>
+              <Link href="/donations/manage" role="tab" aria-selected={false}>Projects</Link>
+              <Link href="/events" role="tab" aria-selected={false}>Events</Link>
             </div>
           </div>
         </section>
 
-        <div className="mx-auto max-w-[1100px] px-5 sm:px-8 py-12">
-          {/* Pending approvals */}
-          <section className="mb-14">
-            <h2 className="mb-5 border-b border-border pb-3 font-display text-[28px] font-medium text-emerald-900">
-              Pending approvals
-            </h2>
-            {pendingRows.length === 0 ? (
-              <p className="border border-border bg-cream px-4 py-10 text-center font-sans text-[14px] text-ink-muted">
-                No one waiting. New sign-ups will appear here for review.
+        <div className="m-wrap m-body">
+          {tab === "members" ? (
+            <section className="m-stackcol" style={{ gap: 16 }}>
+              <p style={{ fontSize: 14, color: "var(--m-muted)", maxWidth: 760 }}>
+                A <strong>class admin</strong> needs a graduating year and can then see that class&rsquo;s donors and
+                reports. A <strong>super admin</strong> has full control. Deleting a member removes their account and
+                directory listing; their donation records are kept so class totals stay accurate.
               </p>
-            ) : (
-              <div className="space-y-4">
-                {pendingRows.map((p) => (
-                  <div
-                    key={p.id}
-                    className="border border-border border-l-4 border-l-gold-500 bg-cream px-6 py-5"
-                  >
-                    {/* Header: who, and the decision buttons */}
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div className="min-w-0">
-                        <p className="font-display text-[22px] font-semibold text-emerald-900">
-                          {p.full_name}
-                        </p>
-                        <p className="font-sans text-[13px] text-ink-soft">{p.email}</p>
-                        <p className="mt-0.5 font-sans text-[11px] text-ink-muted">
-                          Requested {shortDate(p.created_at)}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <form action={approveMember} id={`approve-${p.id}`}>
-                          <input type="hidden" name="id" value={p.id} />
-                          <button type="submit" className="btn btn-primary px-5 py-2.5 text-[12px]">
-                            Approve
-                          </button>
-                        </form>
-                        <form action={rejectMember}>
-                          <input type="hidden" name="id" value={p.id} />
-                          <button type="submit" className="btn btn-danger px-5 py-2.5 text-[12px]">
-                            Reject
-                          </button>
-                        </form>
-                      </div>
-                    </div>
-
-                    <RegisterMatch
-                      formId={`approve-${p.id}`}
-                      matches={findMatches(p.full_name, p.class_year, register)}
-                    />
-
-                    {/* Everything they submitted */}
-                    <dl className="mt-4 grid gap-x-8 gap-y-3 border-t border-border pt-4 sm:grid-cols-2 lg:grid-cols-3">
-                      <Detail
-                        label="Graduating class"
-                        value={p.class_year ? String(p.class_year) : null}
-                      />
-                      <Detail label="Profession" value={p.occupation} />
-                      <Detail label="Phone" value={p.phone} />
-                      <Detail label="City" value={p.city} />
-                      <Detail label="State" value={p.state} />
-                      <Detail label="Country" value={p.country} />
-                    </dl>
-
-                    {p.bio && (
-                      <div className="mt-4 border-t border-border pt-4">
-                        <p className="font-sans text-[11px] uppercase tracking-[0.12em] text-ink-muted">
-                          About them
-                        </p>
-                        <p className="mt-1.5 text-[14px] leading-relaxed text-ink-soft">{p.bio}</p>
-                      </div>
-                    )}
-
-                    {/* The thing that actually decides it */}
-                    <div className="mt-4 border-l-2 border-gold-500 bg-gold-500/10 px-4 py-3">
-                      <p className="font-sans text-[11px] uppercase tracking-[0.12em] text-ink-muted">
-                        Identity check &middot; senior prefect in their final year
-                      </p>
-                      <p className="mt-1 font-sans text-[15px] font-semibold text-emerald-900">
-                        {p.verification_answer || "(not answered)"}
-                      </p>
-                    </div>
-                  </div>
+              <div className="m-card" style={{ overflow: "hidden" }}>
+                {memberRows.map((m) => (
+                  <MemberRow key={m.id} member={m} isSelf={m.id === user.id} />
                 ))}
               </div>
-            )}
-          </section>
+            </section>
+          ) : (
+            <div className="m-adm">
+              <section className="m-stackcol" style={{ gap: 16 }}>
+                <div className="m-rule-h" style={{ borderTop: 0, paddingTop: 0 }}>
+                  <h2 style={{ fontSize: 26 }}>Waiting for approval</h2>
+                </div>
+                {pendingRows.length === 0 ? (
+                  <div className="m-card m-empty">No one is waiting. New requests will appear here for review.</div>
+                ) : (
+                  pendingRows.map((p) => (
+                    <article key={p.id} className="m-card m-req">
+                      <div className="top">
+                        <div style={{ minWidth: 0 }}>
+                          <h3>{p.full_name}</h3>
+                          <p>
+                            {[
+                              p.class_year ? `Class of ${p.class_year}` : "Class not given",
+                              p.occupation,
+                              [p.state ?? p.city, p.country].filter(Boolean).join(", "),
+                              `requested ${shortDate(p.created_at)}`,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </p>
+                          <p>{p.email}</p>
+                        </div>
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "flex-start" }}>
+                          <form action={approveMember} id={`approve-${p.id}`}>
+                            <input type="hidden" name="id" value={p.id} />
+                            <button type="submit" className="m-btn m-btn-primary">Approve</button>
+                          </form>
+                          <form action={rejectMember}>
+                            <input type="hidden" name="id" value={p.id} />
+                            <button type="submit" className="m-btn m-btn-line" style={{ color: "#8a2a2a" }}>Reject</button>
+                          </form>
+                        </div>
+                      </div>
+                      <div className="mid">
+                        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                          <span className="lbl">Identity check · senior prefect in final year</span>
+                          <b style={{ color: "var(--m-emerald)" }}>{p.verification_answer || "(not answered)"}</b>
+                          {p.bio && <p style={{ fontSize: 14, color: "#4d5358", marginTop: 8 }}>{p.bio}</p>}
+                          {p.phone && <span style={{ fontSize: 13, color: "var(--m-muted)" }}>Phone: {p.phone}</span>}
+                        </div>
+                        <RegisterMatch formId={`approve-${p.id}`} matches={findMatches(p.full_name, p.class_year, register)} />
+                      </div>
+                    </article>
+                  ))
+                )}
+              </section>
 
-          {/* Members + roles */}
-          <section>
-            <h2 className="mb-2 border-b border-border pb-3 font-display text-[28px] font-medium text-emerald-900">
-              Members &amp; roles
-            </h2>
-            <p className="mb-5 font-sans text-[12px] text-ink-muted">
-              Set a member&rsquo;s role. A <strong>class admin</strong> needs a graduating
-              year and can then see that class&rsquo;s donors and reports. A{" "}
-              <strong>super admin</strong> has full control.
-            </p>
-            <div className="overflow-hidden rounded-[2px] border border-border bg-cream">
-              {memberRows.map((m) => (
-                <MemberRow key={m.id} member={m} isSelf={m.id === user.id} />
-              ))}
+              <aside className="m-stackcol" style={{ gap: 16 }}>
+                <div className="m-rule-h" style={{ borderTop: 0, paddingTop: 0 }}>
+                  <h2 style={{ fontSize: 26 }}>This year at a glance</h2>
+                </div>
+                <div className="m-card m-kpis m-num">
+                  <div><b>{ngn(givenThisYear)}</b><span>Given in {year}</span></div>
+                  <div><b>{donors}</b><span>Donors</span></div>
+                  <div><b>{duesPayers} / {memberRows.length}</b><span>Members who paid dues</span></div>
+                  <div><b>{newThisMonth}</b><span>New members this month</span></div>
+                </div>
+                <div className="m-card m-ledger m-num">
+                  <div style={{ fontWeight: 700, borderBottom: "1px solid var(--m-line)" }}>
+                    <span>Latest payments</span>
+                    <span />
+                    <Link className="m-link" href="/donations/reports" style={{ fontSize: 14 }}>Full ledger →</Link>
+                  </div>
+                  {giftRows.length === 0 && <div style={{ display: "block", color: "var(--m-muted)" }}>No payments yet this year.</div>}
+                  {giftRows.slice(0, 6).map((g) => (
+                    <div key={g.id}>
+                      <b style={{ fontWeight: 600 }}>{g.is_anonymous ? "Anonymous" : g.donor_name ?? "Member"}</b>
+                      <span style={{ color: "var(--m-muted)" }}>
+                        {g.kind === "dues" ? `${g.period_year ?? year} dues` : (g.project_id && titleById.get(g.project_id)) || "Project"}
+                      </span>
+                      <b style={{ textAlign: "right" }}>{ngn(Number(g.amount))}</b>
+                    </div>
+                  ))}
+                </div>
+              </aside>
             </div>
-            <p className="mt-3 font-sans text-[12px] text-ink-muted">
-              Deleting a member removes their account, sign-in, and directory listing.
-              Their donation records are kept, so class totals stay accurate.
-            </p>
-          </section>
+          )}
         </div>
       </main>
       <SiteFooter />
@@ -196,7 +204,7 @@ function Detail({ label, value }: { label: string; value: string | null }) {
         {label}
       </dt>
       <dd className="mt-0.5 font-sans text-[14px] text-ink">
-        {value || <span className="text-ink-muted">Not given</span>}
+        {value || <span style={{ color: "var(--m-muted)" }}>Not given</span>}
       </dd>
     </div>
   );
@@ -242,9 +250,12 @@ function findMatches(fullName: string, year: number | null, rows: RegisterRow[])
 function RegisterMatch({ formId, matches }: { formId: string; matches: Match[] }) {
   if (matches.length === 0) {
     return (
-      <p className="mt-4 font-sans text-[12px] text-ink-muted">
-        No likely match in the OSA register. Approving creates a new directory listing.
-      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+        <span className="lbl">Match in the OSA register</span>
+        <span style={{ fontSize: 14, color: "var(--m-muted)" }}>
+          No likely match. Approving creates a new directory listing.
+        </span>
+      </div>
     );
   }
   // Pre-select only a clear winner; ties (e.g. two "Emmanuel Ajayi", 1978)
@@ -252,13 +263,13 @@ function RegisterMatch({ formId, matches }: { formId: string; matches: Match[] }
   const clear = matches[0].score >= 4 && (matches.length === 1 || matches[1].score < matches[0].score);
   const best = clear ? matches[0].id : "new";
   return (
-    <fieldset className="mt-4 border border-border bg-paper px-4 py-3">
-      <legend className="px-1 font-sans text-[11px] uppercase tracking-[0.12em] text-ink-muted">
-        Possible match in the OSA register
+    <fieldset style={{ border: 0, padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 2 }}>
+      <legend className="lbl" style={{ paddingBottom: 6 }}>
+        Match in the OSA register
       </legend>
-      <div className="space-y-2">
+      <div>
         {matches.map((m) => (
-          <label key={m.id} className="flex cursor-pointer items-center gap-3 font-sans text-[14px] text-ink">
+          <label key={m.id} className="m-radio">
             <input
               type="radio"
               name="link_alumni_id"
@@ -268,13 +279,13 @@ function RegisterMatch({ formId, matches }: { formId: string; matches: Match[] }
             />
             <span>
               Link to <strong>{m.full_name}</strong>
-              <span className="text-ink-muted">
+              <span style={{ color: "var(--m-muted)" }}>
                 {" "}&middot; {m.class_year ? `Class of ${m.class_year}` : "year unknown"}
               </span>
             </span>
           </label>
         ))}
-        <label className="flex cursor-pointer items-center gap-3 font-sans text-[14px] text-ink">
+        <label className="m-radio">
           <input
             type="radio"
             name="link_alumni_id"
@@ -282,7 +293,7 @@ function RegisterMatch({ formId, matches }: { formId: string; matches: Match[] }
             form={formId}
             defaultChecked={best === "new"}
           />
-          <span>Not them, create a new listing</span>
+          <span>Not on the register, create a new listing</span>
         </label>
       </div>
     </fieldset>

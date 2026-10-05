@@ -32,6 +32,11 @@ export async function createEvent(
     return { error: "Title and start date/time are required." };
   }
 
+  // <input type="datetime-local"> has no timezone. Times are entered in
+  // Lagos time (WAT, UTC+1, no daylight saving), so pin the offset instead of
+  // letting the server's own timezone decide.
+  const lagos = (v: string) => new Date(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(v) ? `${v}:00+01:00` : v);
+
   const { error } = await supabase.from("events").insert({
     title,
     description: clean(formData.get("description")),
@@ -39,10 +44,10 @@ export async function createEvent(
       | "in_person"
       | "virtual"
       | "hybrid",
-    starts_at: new Date(startsRaw).toISOString(),
+    starts_at: lagos(startsRaw).toISOString(),
     ends_at: (() => {
       const e = clean(formData.get("ends_at"));
-      return e ? new Date(e).toISOString() : null;
+      return e ? lagos(e).toISOString() : null;
     })(),
     location: clean(formData.get("location")),
     zoom_url: clean(formData.get("zoom_url")),
@@ -103,5 +108,11 @@ export async function rsvp(
   }
 
   revalidatePath("/events");
+  revalidatePath("/home");
   return { message: going ? "You're going!" : "RSVP removed." };
+}
+
+/** Plain form-action version of rsvp, for one-click buttons (Home page). */
+export async function rsvpToggle(formData: FormData): Promise<void> {
+  await rsvp({}, formData);
 }

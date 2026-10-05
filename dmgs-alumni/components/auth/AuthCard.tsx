@@ -11,12 +11,11 @@ export function AuthCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative w-full max-w-[460px] border border-border bg-cream px-6 py-10 shadow-soft sm:px-12 sm:py-14">
-      <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-900 to-gold-500" />
-      <div className="mx-auto mb-6 flex justify-center">
-        <Crest size={72} />
+    <div className="relative w-full max-w-[480px] border border-border bg-white px-6 py-10 sm:px-10 sm:py-12">
+      <div className="mx-auto mb-5 flex justify-center">
+        <Crest size={64} />
       </div>
-      <h2 className="mb-2 text-center font-display text-[28px] font-medium tracking-[-0.01em] text-emerald-900 sm:text-[34px]">
+      <h2 className="mb-2 text-center font-display text-[28px] font-semibold text-emerald-900 sm:text-[32px]">
         {title}
       </h2>
       <p className="mb-9 text-center font-sans text-[14px] text-ink-muted">

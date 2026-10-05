@@ -45,7 +45,7 @@ export async function approveMember(formData: FormData) {
   if (!existing) {
     const { data: p } = await supabase
       .from("profiles")
-      .select("full_name, occupation, city, state, country, phone, bio, class_year")
+      .select("full_name, first_name, last_name, maiden_name, occupation, city, state, country, phone, bio, class_year")
       .eq("id", memberId)
       .single();
 
@@ -61,6 +61,9 @@ export async function approveMember(formData: FormData) {
         .update({
           profile_id: memberId,
           full_name: p.full_name,
+          ...(p.first_name ? { first_name: p.first_name } : {}),
+          ...(p.last_name ? { last_name: p.last_name } : {}),
+          ...(p.maiden_name ? { maiden_name: p.maiden_name } : {}),
           ...(p.class_year ? { class_year: p.class_year } : {}),
           ...(p.occupation ? { occupation: p.occupation } : {}),
           ...(p.city ? { city: p.city } : {}),
@@ -80,6 +83,9 @@ export async function approveMember(formData: FormData) {
       await supabase.from("alumni").insert({
         profile_id: memberId,
         full_name: p.full_name,
+        first_name: p.first_name,
+        last_name: p.last_name,
+        maiden_name: p.maiden_name,
         occupation: p.occupation,
         city: p.city,
         state: p.state,

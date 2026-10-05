@@ -99,7 +99,7 @@ export function NewConversation({
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-emerald-900/60 p-3 backdrop-blur-sm sm:p-6" onClick={onClose}>
-      <div className="max-h-[85dvh] w-full max-w-[480px] overflow-y-auto rounded border border-border bg-paper shadow-lg" onClick={(e) => e.stopPropagation()}>
+      <div className="max-h-[85dvh] w-full max-w-[480px] overflow-y-auto border border-border bg-paper shadow-lg" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <h3 className="font-display text-[22px] font-semibold text-emerald-900">New conversation</h3>
           <button onClick={onClose} aria-label="Close" className="text-ink-muted">✕</button>
@@ -128,7 +128,7 @@ export function NewConversation({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Group name (e.g. Class of '82)"
-              className="field-input mb-3"
+              className="m-input" style={{ marginBottom: 12 }}
             />
           )}
 
@@ -136,13 +136,13 @@ export function NewConversation({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search members…"
-            className="field-input mb-3"
+            className="m-input" style={{ marginBottom: 12 }}
           />
 
           {mode === "group" && selected.length > 0 && (
             <div className="mb-3 flex flex-wrap gap-1.5">
               {selected.map((m) => (
-                <span key={m.id} className="rounded-full bg-emerald-900 px-2.5 py-1 font-sans text-[11px] text-cream">
+                <span key={m.id} className="bg-emerald-900 px-2.5 py-1 font-sans text-[11px] text-cream">
                   {m.full_name} ✕
                 </span>
               ))}
@@ -177,7 +177,7 @@ export function NewConversation({
           </div>
 
           {mode === "group" && (
-            <button onClick={createGroup} disabled={busy} className="btn btn-primary mt-4 w-full justify-center disabled:opacity-60">
+            <button onClick={createGroup} disabled={busy} className="m-btn m-btn-primary m-btn-block" style={{ marginTop: 16 }}>
               {busy ? "Creating…" : "Create group"}
             </button>
           )}

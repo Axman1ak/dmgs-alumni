@@ -89,73 +89,48 @@ export function DuesCard({
   // Amount not configured yet.
   if (amount === null) {
     return (
-      <div className="border border-border bg-cream p-6">
-        <p className="text-[15px] text-ink-soft">
-          The {year} dues amount hasn&rsquo;t been set yet. Please check back soon.
+      <div className="m-card" style={{ padding: 28 }}>
+        <span className="m-eyebrow">Annual dues · {year}</span>
+        <p style={{ marginTop: 8, color: "#4d5358" }}>
+          The {year} dues amount has not been set yet. Please check back soon.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="grid border border-border bg-cream md:grid-cols-[1.1fr_1fr]">
-      {/* Left: what it is */}
-      <div className="border-b border-border p-7 sm:p-8 md:border-b-0 md:border-r">
-        {done ? (
-          <span className="inline-flex items-center gap-2 border border-success px-3 py-1.5 font-sans text-[11px] font-semibold uppercase tracking-[0.1em] text-success">
-            <span className="h-2 w-2 rounded-full bg-success" />
-            Paid for {year}
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-2 border border-gold-500 bg-gold-500/10 px-3 py-1.5 font-sans text-[11px] font-semibold uppercase tracking-[0.1em] text-gold-500">
-            <span className="h-2 w-2 rounded-full bg-gold-500" />
-            Not paid for {year}
-          </span>
-        )}
-        <div className="mt-4 font-display text-[44px] font-semibold leading-none text-emerald-900">
-          {ngn(amount)}
-        </div>
-        <div className="mt-1 font-sans text-[13px] text-ink-muted">
-          {classLabel ?? "Your class"} · {year}
-        </div>
-        <p className="mt-4 text-[16px] leading-relaxed text-ink-soft">
-          Your yearly membership contribution to your class.
-        </p>
+    <section className="m-card m-dues" id="dues">
+      <div>
+        <span className="m-eyebrow">Annual dues · {year}</span>
+        <span className="m-big m-num">{ngn(amount)}</span>
+        <span className="m-pill" style={{ color: done ? "#1f6a52" : "#9a4a17" }}>
+          <span className="m-dot" />
+          {done ? `Paid for ${year}` : "Not paid yet"}
+        </span>
       </div>
-
-      {/* Right: participation + action */}
-      <div className="flex flex-col justify-center bg-paper p-7 sm:p-8">
-        {/* Always shown so members see where their class stands. */}
-        <div className="mb-2 flex justify-between font-sans text-[12px] text-ink-muted">
-          <span>{classLabel ?? "Your class"} paid this year</span>
-          <span>
-            <b className="text-emerald-900">{paidCount}</b> / {memberCount}
-          </span>
+      <div>
+        <b>{classLabel ?? "Your class"} participation</b>
+        <div className="m-bar">
+          <span style={{ width: `${pct}%` }} />
         </div>
-        <div className="h-2 overflow-hidden bg-cream-dark">
-          <div className="h-full bg-success" style={{ width: `${pct}%` }} />
-        </div>
-
-        {error && <p className="mt-4 font-sans text-[12px] text-danger">{error}</p>}
-
+        <span style={{ fontSize: 14, color: "var(--m-muted)" }}>
+          {paidCount} of {memberCount} {memberCount === 1 ? "member" : "members"} from your class{" "}
+          {paidCount === 1 ? "has" : "have"} paid this year.
+        </span>
+      </div>
+      <div>
+        {error && <p className="m-error">{error}</p>}
         {done ? (
-          <p className="mt-5 font-sans text-[14px] text-ink-soft">
-            Thank you. Your {year} dues are settled.
-          </p>
+          <p className="m-toast">Thank you. Your {year} dues are settled.</p>
         ) : (
-          <button
-            onClick={pay}
-            disabled={!configured || busy}
-            className="btn btn-gold mt-6 justify-center py-3.5 disabled:opacity-50"
-          >
-            {!configured
-              ? "Payment opens soon"
-              : busy
-                ? "Processing…"
-                : `Pay ${ngn(amount)} for ${year} →`}
-          </button>
+          <>
+            <button type="button" onClick={pay} disabled={!configured || busy} className="m-btn m-btn-gold m-btn-block">
+              {!configured ? "Payment opens soon" : busy ? "Processing…" : `Pay ${ngn(amount)} dues`}
+            </button>
+            <span className="m-secure">Card or bank transfer · secured by Paystack</span>
+          </>
         )}
       </div>
-    </div>
+    </section>
   );
 }

@@ -1,18 +1,32 @@
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { MessagesClient } from "@/components/messages/MessagesClient";
 import { createClient } from "@/lib/supabase/server";
 import type { Conversation, MemberName } from "@/components/messages/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function MessagesPage() {
+export default async function MessagesPage({
+  searchParams,
+}: {
+  searchParams: { to?: string; mentor?: string };
+}) {
   const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
   const me = user.id;
+
+  // Opened from a directory profile: find or create the direct chat first,
+  // so it is already in the list below.
+  let openChatId: string | null = null;
+  const to = searchParams.to;
+  if (to && /^[0-9a-f-]{36}$/i.test(to) && to !== me) {
+    const { data: chatId } = await supabase.rpc("get_or_create_direct_chat", { p_other: to });
+    if (typeof chatId === "string") openChatId = chatId;
+  }
 
   const [{ data: profile }, { data: memberships }, { data: broadcast }] =
     await Promise.all([
@@ -131,7 +145,10 @@ export default async function MessagesPage() {
         isSuperAdmin={isSuperAdmin}
         conversations={conversations}
         directory={(directory ?? []) as MemberName[]}
+        initialActiveId={openChatId}
+        initialDraft={openChatId && searchParams.mentor ? "Hello, I saw you are open to mentoring. Could I ask your advice about " : ""}
       />
+      <SiteFooter />
     </>
   );
 }

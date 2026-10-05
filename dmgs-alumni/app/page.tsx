@@ -1,31 +1,35 @@
 import Link from "next/link";
-import Image from "next/image";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import { Reveal } from "@/components/donations/Reveal";
+import { BeforeAfter } from "@/components/landing/BeforeAfter";
+import { CountUp } from "@/components/landing/CountUp";
+import { ClassFinder } from "@/components/landing/ClassFinder";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
-const SCHOOL = "https://www.dohertyijero.com.ng";
-// Hero: the school gate. Rendered as a CSS background, loads reliably.
-const HERO_IMG = `${SCHOOL}/wp-content/uploads/entrance.png`;
-// The original library photo. It's a ~900KB PNG that failed to load on mobile
-// connections, so it is rendered through next/image below: Vercel fetches it
-// once, resizes and re-encodes it (WebP), and serves the phone a ~50KB version.
-// Same picture, a fraction of the weight.
-const LIB_IMG = `${SCHOOL}/wp-content/uploads/lib.png`;
-
-const SCHOOL_LINKS = [
-  { href: `${SCHOOL}/`, label: "School Home", note: "The official DMGS website" },
-  { href: `${SCHOOL}/our-school/`, label: "Our School", note: "History since 1955" },
-  { href: `${SCHOOL}/alumni/`, label: "Old Students", note: "OSA news and notices" },
-  { href: `${SCHOOL}/gallery/`, label: "Gallery", note: "Photos of campus and events" },
-  { href: `${SCHOOL}/news/`, label: "News", note: "Latest from the school" },
-  { href: `${SCHOOL}/contact-us/`, label: "Contact", note: "Reach the school" },
+// Completed works shown on the public page (photos from the school's
+// "Then & Now" posts). Confirm with the association which ones it funded.
+const WORK = [
+  { tag: "Classrooms", title: "The four-classroom block, rebuilt", body: "New roofing, windows, doors, ceilings and terrazzo floors for a block that had fallen out of use.", before: "/img/class-before.jpg", after: "/img/class-after.jpg" },
+  { tag: "Clean water", title: "A borehole and water tower", body: "Water drilled on campus and piped to the buildings that need it most.", before: "/img/water-before.jpg", after: "/img/water-after.jpg" },
+  { tag: "Staff housing", title: "The principal's house, renovated", body: "Restored and connected to running water, so staff can live and supervise on campus.", before: "/img/house-before.jpg", after: "/img/house-after.jpg" },
 ];
 
-export default async function HomePage() {
+const WAYS = [
+  ["Find your classmates", "Search the members directory by class, city or profession."],
+  ["Support a project", "Give to classrooms, clean water or staff housing."],
+  ["Pay your class dues", "Help your graduating class reach its annual goal."],
+  ["Attend a reunion", "Class meetings and association events, in person and online."],
+];
+
+const ARROW = (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1f6a52" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M5 12h14M13 6l6 6-6 6" />
+  </svg>
+);
+
+export default async function LandingPage() {
   const supabase = createClient();
   const {
     data: { user },
@@ -33,249 +37,142 @@ export default async function HomePage() {
 
   let approved = false;
   if (user) {
-    const { data } = await supabase
-      .from("profiles")
-      .select("status")
-      .eq("id", user.id)
-      .single();
+    const { data } = await supabase.from("profiles").select("status").eq("id", user.id).single();
     approved = data?.status === "approved";
   }
 
-  const years = new Date().getFullYear() - 1955;
+  const [{ data: stats }, { data: counts }] = await Promise.all([
+    supabase.rpc("public_register_stats"),
+    supabase.rpc("public_class_counts"),
+  ]);
+  const onRegister = stats?.[0]?.on_register ?? 0;
+  const classes = stats?.[0]?.classes ?? 0;
+
+  const joinHref = approved ? "/home" : "/signup";
+  const joinLabel = approved ? "Go to the member area" : "Become a member";
 
   return (
     <>
       <SiteHeader />
-
-      <main>
-        {/* Hero */}
-        <section className="relative flex min-h-[76vh] items-center overflow-hidden">
-          <div
-            className="absolute inset-0 scale-105 bg-cover bg-center"
-            style={{ backgroundImage: `url('${HERO_IMG}')` }}
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-emerald-900/85 via-emerald-900/70 to-emerald-900/90" />
-          <div className="texture-diagonal absolute inset-0 opacity-60" />
-
-          <div className="relative mx-auto w-full max-w-[1100px] px-5 sm:px-8 py-24 text-center text-cream">
-            <p className="animate-fadeIn mb-5 font-sans text-[12px] font-semibold uppercase tracking-[0.28em] text-gold-400">
-              Est. 7 February 1955 &middot; Ijero-Ekiti
-            </p>
-            <h1 className="animate-fadeIn mx-auto max-w-4xl font-display text-[clamp(34px,7vw,88px)] font-medium leading-[0.98] tracking-[-0.02em]">
-              Once a Doherty student, <em className="italic text-gold-400">always</em> family.
-            </h1>
-            <p className="animate-fadeIn mx-auto mt-6 max-w-[600px] text-[18px] leading-relaxed text-cream/85">
-              The home of the Doherty Memorial Grammar School Old Students
-              Association, reconnecting classmates across Nigeria, the United
-              States, Canada, the United Kingdom, and beyond.
-            </p>
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
-              {approved ? (
-                <>
-                  <Link href="/directory" className="btn btn-gold">
-                    Enter the directory
-                  </Link>
-                  <Link
-                    href="/events"
-                    className="btn btn-outline border-cream/40 text-cream hover:border-gold-400 hover:text-gold-400"
-                  >
-                    See events
-                  </Link>
-                </>
-              ) : user ? (
-                <Link href="/pending" className="btn btn-gold">
-                  Your membership status
-                </Link>
-              ) : (
-                <>
-                  <Link href="/signup" className="btn btn-gold">
-                    Request membership
-                  </Link>
-                  <Link
-                    href="/login"
-                    className="btn btn-outline border-cream/40 text-cream hover:border-gold-400 hover:text-gold-400"
-                  >
-                    Member sign in
-                  </Link>
-                </>
-              )}
-            </div>
-
-            {/* Stats */}
-            {/* Grid, not flex-wrap: with four stats the last one ("5+ countries
-                reunited") was dropping onto a second line. 4 across on desktop,
-                2x2 on a phone. */}
-            <div className="mx-auto mt-12 grid max-w-[860px] grid-cols-2 gap-x-6 gap-y-8 border-t border-cream/20 pt-9 sm:grid-cols-4 sm:gap-x-8">
-              {[
-                { num: `${years}`, label: "Years of legacy" },
-                { num: "1955", label: "Founded" },
-                { num: "3", label: "Oldest schools in Ekiti" },
-                { num: "5+", label: "Countries reunited" },
-              ].map((s) => (
-                <div key={s.label} className="text-center">
-                  <div className="font-display text-[40px] font-semibold leading-none text-gold-400">
-                    {s.num}
-                  </div>
-                  <div className="mt-2 font-sans text-[11px] uppercase tracking-[0.16em] text-cream/70">
-                    {s.label}
-                  </div>
-                </div>
-              ))}
+      <main className="m-app ld">
+        {/* HERO */}
+        <section className="ld-hero">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/img/hero.jpg" alt="Doherty students choosing books in the school library" />
+          <div className="m-wrap">
+            <div className="ld-copy">
+              <span className="ld-kicker">Old Students Association</span>
+              <h1>Giving back to the school that shaped us.</h1>
+              <p>We connect the old students of Doherty Memorial Grammar School and fund the repairs the school cannot wait for.</p>
+              <div className="ld-ctas">
+                <Link className="m-btn m-btn-gold" href={joinHref}>{joinLabel}</Link>
+                <a className="m-btn m-btn-ghost" href="#work">See our work</a>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* The school */}
-        <section className="mx-auto max-w-[1200px] px-5 sm:px-8 py-20">
-          <div className="grid items-center gap-12 lg:grid-cols-2">
-            <Reveal>
-              {/* Fixed aspect ratio: without it, a slow or failed image left a
-                  huge empty box on mobile instead of a photo. */}
-              <div className="relative aspect-[4/3] overflow-hidden border border-border bg-emerald-900 shadow-lg">
-                <Image
-                  src={LIB_IMG}
-                  alt="Doherty Memorial Grammar School"
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 600px"
-                  className="object-cover transition-transform duration-700 hover:scale-105"
-                />
-                <span className="absolute bottom-0 left-0 bg-emerald-900/90 px-4 py-2 font-sans text-[11px] uppercase tracking-[0.16em] text-gold-400 backdrop-blur">
-                  Ijero-Ekiti, Nigeria
-                </span>
-              </div>
-            </Reveal>
-
-            <Reveal delay={120}>
-              <div>
-                <p className="mb-3 font-sans text-[11px] uppercase tracking-[0.2em] text-gold-500">
-                  The school
-                </p>
-                <h2 className="mb-5 font-display text-[30px] font-medium leading-tight text-emerald-900 sm:text-[40px]">
-                  Leaders of tomorrow, since 1955
-                </h2>
-                <div className="space-y-4 font-serif text-[17px] leading-relaxed text-ink-soft">
-                  <p>
-                    Founded on 7 February 1955, Doherty Memorial Grammar School is
-                    one of the three oldest schools in Ekiti State. It was named
-                    for the Doherty family, whose children helped provide the funds
-                    that launched the college.
-                  </p>
-                  <p>
-                    In 1956, just a year after its first thirty students resumed,
-                    eight Doherty boys were chosen to meet the Queen of England
-                    during her visit to Nigeria. The school became co-educational
-                    in 1967, and has since sent generations of graduates into
-                    medicine, engineering, law, and public life across the world.
-                  </p>
-                  <p className="border-l-2 border-gold-500 pl-4 font-sans text-[15px] italic text-ink-muted">
-                    &ldquo;To defend the integrity of Doherty Memorial Grammar
-                    School by performing extraordinary acts extraordinarily.&rdquo;
-                  </p>
-                </div>
-                <a
-                  href={`${SCHOOL}/our-school/`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-primary mt-7"
-                >
-                  Visit the school&rsquo;s website
-                </a>
-              </div>
-            </Reveal>
+        {/* INTRO */}
+        <section className="ld-intro">
+          <div className="m-wrap">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/crest.png" alt="" width={64} height={64} />
+            <p>Since 1955, Doherty has sent its students into medicine, engineering, law and public life across the world. Today, its old students are returning the favour.</p>
+            <a className="m-link ld-underline" href="#school">About the association</a>
           </div>
         </section>
 
-        {/* Explore the school online */}
-        <section className="border-y border-border bg-cream px-5 sm:px-8 py-16">
-          <div className="mx-auto max-w-[1200px]">
-            <Reveal>
-              <div className="mb-8 flex items-baseline justify-between border-b border-border pb-3">
-                <h2 className="font-display text-[28px] font-medium text-emerald-900">
-                  Explore the school online
-                </h2>
-                <span className="font-sans text-[11px] uppercase tracking-[0.16em] text-gold-500">
-                  dohertyijero.com.ng
-                </span>
-              </div>
-            </Reveal>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {SCHOOL_LINKS.map((l, i) => (
-                <Reveal key={l.href} delay={i * 60}>
-                  <a
-                    href={l.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex items-center justify-between border border-border bg-paper px-5 py-4 transition-all hover:-translate-y-0.5 hover:border-emerald-700 hover:shadow-soft"
-                  >
-                    <span>
-                      <span className="block font-display text-[20px] font-semibold text-emerald-900">
-                        {l.label}
-                      </span>
-                      <span className="font-sans text-[12px] text-ink-muted">{l.note}</span>
-                    </span>
-                    <span className="font-sans text-[18px] text-gold-500 transition-transform group-hover:translate-x-1">
-                      &rarr;
-                    </span>
-                  </a>
-                </Reveal>
-              ))}
-            </div>
+        {/* OUR WORK */}
+        <section className="m-wrap ld-work" id="work">
+          <div className="m-rule-h">
+            <h2>Our work on campus</h2>
+            <Link className="m-link" href={approved ? "/donations" : "/signup"}>All projects →</Link>
           </div>
-        </section>
-
-        {/* Your community */}
-        <section className="mx-auto max-w-[1200px] px-5 sm:px-8 py-20">
-          <Reveal>
-            <h2 className="mb-10 text-center font-display text-[28px] font-medium text-emerald-900 sm:text-[36px]">
-              Your community, in one place
-            </h2>
-          </Reveal>
-          <div className="grid gap-6 md:grid-cols-3">
-            {[
-              {
-                title: "Find your classmates",
-                body: "A searchable, yearbook-style directory of old students by name, class year, profession, and location.",
-              },
-              {
-                title: "Gather again",
-                body: "Reunions, virtual meetups, and homecomings with RSVP, wherever in the world you are.",
-              },
-              {
-                title: "Give back",
-                body: "Support the school and your class projects securely, with transparent class-by-class giving.",
-              },
-            ].map((c, i) => (
-              <Reveal key={c.title} delay={i * 90}>
-                <div className="h-full border border-border bg-cream p-8 shadow-soft transition-transform hover:-translate-y-1">
-                  <h3 className="mb-3 font-display text-[24px] font-semibold text-emerald-900">
-                    {c.title}
-                  </h3>
-                  <p className="text-[15px] leading-relaxed text-ink-soft">{c.body}</p>
-                </div>
-              </Reveal>
+          <div className="ld-grid3">
+            {WORK.map((w) => (
+              <article key={w.title} className="ld-wcard ld-reveal">
+                <BeforeAfter before={w.before} after={w.after} label={w.title} />
+                <span className="ld-hint">Drag the handle to compare</span>
+                <span className="m-eyebrow">{w.tag}</span>
+                <h3>{w.title}</h3>
+                <p>{w.body}</p>
+              </article>
             ))}
           </div>
         </section>
 
-        {/* CTA */}
-        {!approved && (
-          <section className="texture-diagonal bg-emerald-900 px-5 sm:px-8 py-20 text-center text-cream">
-            <Reveal>
-              <h2 className="mx-auto max-w-[560px] font-display text-[30px] font-medium leading-tight sm:text-[40px]">
-                Rejoin the Doherty family
-              </h2>
-              <p className="mx-auto mt-4 max-w-[440px] font-serif text-[17px] italic text-cream/85">
-                Request your membership today, and an administrator will verify and
-                welcome you in.
-              </p>
-              <Link href={user ? "/pending" : "/signup"} className="btn btn-gold mt-8 px-5 sm:px-8 py-4">
-                {user ? "Your membership status" : "Request membership"}
-              </Link>
-            </Reveal>
-          </section>
-        )}
-      </main>
+        {/* ACCOUNTABILITY */}
+        <section className="ld-acct" id="accountability">
+          <div className="m-wrap">
+            <div className="left">
+              <span className="m-eyebrow" style={{ color: "var(--m-gold)" }}>Accountability</span>
+              <h2>Every project publishes its budget. Every donor receives the receipts.</h2>
+            </div>
+            <div className="ld-stats m-num">
+              <div><span className="v"><CountUp value={onRegister} /></span><span className="l">Old students on the register</span></div>
+              <div><span className="v"><CountUp value={classes} /></span><span className="l">Graduating classes represented</span></div>
+              <div><span className="v"><CountUp value={WORK.length} /></span><span className="l">Campus projects completed</span></div>
+            </div>
+          </div>
+        </section>
 
+        {/* PHOTO + QUOTE */}
+        <section className="ld-quote" id="school">
+          <div className="ph">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/img/gate.jpg" alt="The main gate of Doherty Memorial Grammar School, Ijero-Ekiti" loading="lazy" />
+          </div>
+          <div className="tx">
+            <span className="mark" aria-hidden="true">“</span>
+            <p>To defend the integrity of Doherty Memorial Grammar School by performing extraordinary acts extraordinarily.</p>
+            <small>The charge given to every Doherty student</small>
+          </div>
+        </section>
+
+        {/* GET INVOLVED */}
+        <section className="ld-involved">
+          <div className="m-wrap">
+            <div className="left">
+              <h2>Get involved</h2>
+              <p>Membership is free and open to every old student. An administrator verifies each request before access is granted.</p>
+            </div>
+            <div className="ld-ways">
+              {WAYS.map(([t, b]) => (
+                <Link key={t} className="ld-reveal" href={joinHref}>
+                  <span>
+                    <h3>{t}</h3>
+                    <p>{b}</p>
+                  </span>
+                  {ARROW}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* JOIN */}
+        <section className="ld-join" id="join">
+          <div className="m-wrap">
+            <div className="left">
+              <h2>Are you a Doherty old student?</h2>
+              <p>
+                {onRegister} old students from {classes} graduating classes are already listed in our register. Your name may be one of them.
+              </p>
+              <ClassFinder counts={(counts ?? []) as { class_year: number; people: number }[]} />
+            </div>
+            <div className="ld-ctas">
+              {approved ? (
+                <Link className="m-btn m-btn-primary" href="/home">Go to the member area</Link>
+              ) : (
+                <>
+                  <Link className="m-btn m-btn-primary" href="/signup">Request membership</Link>
+                  <Link className="m-btn m-btn-line" href="/login">Sign in</Link>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
+      </main>
       <SiteFooter />
     </>
   );

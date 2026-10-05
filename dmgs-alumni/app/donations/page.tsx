@@ -2,14 +2,43 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import { ProjectCarousel } from "@/components/donations/ProjectCarousel";
 import { DuesCard } from "@/components/donations/DuesCard";
-import { AnimatedTotal } from "@/components/donations/AnimatedTotal";
-import { Reveal } from "@/components/donations/Reveal";
+import { ProjectArt } from "@/components/donations/ProjectArt";
 import { createClient } from "@/lib/supabase/server";
-import { mapProject } from "@/lib/projects";
+import { mapProject, type Project } from "@/lib/projects";
+import { ngn, shortDate } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
+
+// Completed works (the school's "Then & Now" photos). Same list as the
+// public landing page; confirm with the association which ones it funded.
+const DONE = [
+  { title: "Classroom block", img: "/img/class-after.jpg" },
+  { title: "Borehole & water tower", img: "/img/water-after.jpg" },
+  { title: "Principal's house", img: "/img/house-after.jpg" },
+];
+
+const COLORS = ["#0e3b2e", "#1f6a52", "#c9973f", "#8fb8a3", "#4d5358", "#d9b36a"];
+
+function millions(n: number) {
+  if (n >= 1_000_000) return `₦${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`;
+  return ngn(n);
+}
+
+function BudgetStack({ p }: { p: Project }) {
+  const total = p.budget.reduce((s, b) => s + b.amount, 0) || 1;
+  return (
+    <div className="m-stack" aria-label="Budget breakdown">
+      {p.budget.map((b, i) => (
+        <span
+          key={b.label}
+          title={`${b.label}: ${ngn(b.amount)}`}
+          style={{ width: `${(b.amount / total) * 100}%`, background: COLORS[i % COLORS.length] }}
+        />
+      ))}
+    </div>
+  );
+}
 
 export default async function DonationsPage() {
   const supabase = createClient();
@@ -26,6 +55,7 @@ export default async function DonationsPage() {
     .eq("id", user.id)
     .single();
   const isSuper = profile?.role === "super_admin";
+  const isClassAdmin = profile?.role === "class_admin";
 
   // My graduating class + label.
   const { data: myAlum } = await supabase
@@ -36,160 +66,209 @@ export default async function DonationsPage() {
   const myYear = myAlum?.class_year ?? profile?.class_year ?? null;
   let classLabel: string | null = null;
   if (myYear) {
-    const { data: cls } = await supabase
-      .from("classes")
-      .select("label")
-      .eq("year", myYear)
-      .maybeSingle();
-    classLabel = cls?.label ?? null;
+    const { data: cls } = await supabase.from("classes").select("label").eq("year", myYear).maybeSingle();
+    classLabel = cls?.label ?? `Class of ${myYear}`;
   }
 
-  // Projects + per-project money raised.
-  const { data: projRows } = await supabase
-    .from("projects")
-    .select("*")
-    .order("sort_order");
-  const projects = (projRows ?? [])
-    .filter((p) => p.is_published || isSuper)
-    .map(mapProject);
-
-  const { data: totalsRows } = await supabase.rpc("project_totals");
+  // Projects + money raised per project.
+  const [{ data: projRows }, { data: totalsRows }] = await Promise.all([
+    supabase.from("projects").select("*").order("sort_order"),
+    supabase.rpc("project_totals"),
+  ]);
+  const projects = (projRows ?? []).filter((p) => p.is_published || isSuper).map(mapProject);
   const totalById = new Map<string, number>(
-    (totalsRows ?? []).map((t: { project_id: string; total: number | string }) => [
-      t.project_id,
-      Number(t.total),
-    ]),
+    (totalsRows ?? []).map((t: { project_id: string; total: number | string }) => [t.project_id, Number(t.total)]),
   );
-  const raised: Record<string, number> = {};
-  projects.forEach((p) => {
-    raised[p.slug] = totalById.get(p.id) ?? 0;
-  });
+  const needed = projects.reduce((s, p) => s + Math.max(0, p.goal - (totalById.get(p.id) ?? 0)), 0);
 
   // Dues: amount, whether I've paid this year, class participation.
-  const { data: duesRow } = await supabase
-    .from("annual_dues")
-    .select("amount")
-    .eq("year", year)
-    .maybeSingle();
+  const [{ data: duesRow }, { data: myDues }, { data: part }] = await Promise.all([
+    supabase.from("annual_dues").select("amount").eq("year", year).maybeSingle(),
+    supabase
+      .from("donations")
+      .select("id")
+      .eq("kind", "dues")
+      .eq("donor_profile_id", user.id)
+      .eq("period_year", year)
+      .eq("status", "success")
+      .maybeSingle(),
+    supabase.rpc("class_dues_participation", { p_year: year }),
+  ]);
   const duesAmount = duesRow ? Number(duesRow.amount) : null;
-
-  const { data: myDues } = await supabase
-    .from("donations")
-    .select("id")
-    .eq("kind", "dues")
-    .eq("donor_profile_id", user.id)
-    .eq("period_year", year)
-    .eq("status", "success")
-    .maybeSingle();
-  const paidThisYear = Boolean(myDues);
-
-  const { data: part } = await supabase.rpc("class_dues_participation", { p_year: year });
   const participation = (part?.[0] ?? { member_count: 0, paid_count: 0 }) as {
     member_count: number;
     paid_count: number;
   };
 
-  // My total giving (own successful rows are readable under RLS).
+  // My own successful gifts (readable under RLS).
   const { data: myGifts } = await supabase
     .from("donations")
-    .select("amount")
+    .select("id, amount, kind, project_id, period_year, created_at")
     .eq("donor_profile_id", user.id)
-    .eq("status", "success");
-  const myTotal = (myGifts ?? []).reduce((s, g) => s + Number(g.amount), 0);
-  const myCount = myGifts?.length ?? 0;
+    .eq("status", "success")
+    .order("created_at", { ascending: false });
+  const gifts = myGifts ?? [];
+  const myTotal = gifts.reduce((s, g) => s + Number(g.amount), 0);
+  const titleById = new Map(projects.map((p) => [p.id, p.title]));
 
   return (
     <>
       <SiteHeader />
-      <main>
-        {/* Intro + your total */}
-        <div className="mx-auto flex max-w-[1160px] flex-wrap items-end justify-between gap-6 px-5 pt-10 sm:px-8">
-          <Reveal>
-            <div className="max-w-[720px]">
-              <p className="font-sans text-[12px] uppercase tracking-[0.26em] text-gold-500">
-                Give back
-              </p>
-              <h1 className="mt-2.5 font-display text-[clamp(28px,4.6vw,46px)] font-medium leading-[1.05] text-emerald-900">
-                Support Doherty, and keep your class alive.
-              </h1>
+      <main className="m-app">
+        <section className="m-page-head">
+          <div className="m-wrap">
+            <div>
+              <h1>Give</h1>
             </div>
-          </Reveal>
-          {myTotal > 0 && (
-            <div className="border-r-[3px] border-gold-500 pr-4 text-right">
-              <div className="font-display text-[clamp(30px,4vw,42px)] font-semibold leading-none text-emerald-900">
-                <AnimatedTotal value={myTotal} />
+            {myTotal > 0 && (
+              <div style={{ textAlign: "right" }}>
+                <span className="m-big m-num" style={{ fontSize: 32 }}>{ngn(myTotal)}</span>
+                <div style={{ fontSize: 13, color: "var(--m-muted)" }}>
+                  Your giving, all time · {gifts.length} {gifts.length === 1 ? "gift" : "gifts"}
+                </div>
               </div>
-              <div className="mt-1.5 font-sans text-[11px] uppercase tracking-[0.14em] text-ink-muted">
-                Your giving · {myCount} {myCount === 1 ? "gift" : "gifts"}
-              </div>
+            )}
+          </div>
+        </section>
+
+        <div className="m-wrap m-body" style={{ display: "flex", flexDirection: "column", gap: 40 }}>
+          {/* Dues */}
+          {myYear ? (
+            <DuesCard
+              userEmail={user.email ?? ""}
+              year={year}
+              amount={duesAmount}
+              classLabel={classLabel}
+              paid={Boolean(myDues)}
+              memberCount={participation.member_count}
+              paidCount={participation.paid_count}
+            />
+          ) : (
+            <div className="m-card" style={{ padding: 28 }}>
+              <span className="m-eyebrow">Annual dues · {year}</span>
+              <p style={{ marginTop: 8, color: "#4d5358" }}>
+                Your graduating class is not set yet, so dues cannot be credited to a class. Ask an administrator to set it.
+              </p>
             </div>
           )}
+
+          {/* Open projects */}
+          <section className="m-stackcol">
+            <div className="m-rule-h">
+              <h2>Open projects</h2>
+              <span style={{ fontSize: 14, color: "var(--m-muted)" }}>
+                {projects.length > 0 && `${millions(needed)} needed across ${projects.length} ${projects.length === 1 ? "project" : "projects"}`}
+                {isSuper && (
+                  <>
+                    {projects.length > 0 && " · "}
+                    <Link className="m-link" href="/donations/manage">Manage projects</Link>
+                  </>
+                )}
+              </span>
+            </div>
+            {projects.length === 0 ? (
+              <div className="m-card m-empty">No projects are open right now. Please check back soon.</div>
+            ) : (
+              <div className="m-grid3">
+                {projects.map((p) => {
+                  const raised = totalById.get(p.id) ?? 0;
+                  const pct = p.goal > 0 ? Math.min(100, Math.round((raised / p.goal) * 100)) : 0;
+                  return (
+                    <article key={p.id} className="m-card m-pcard">
+                      <div className="ph">
+                        <ProjectArt project={p} className="h-full w-full" />
+                      </div>
+                      <div className="top">
+                        <span className="m-eyebrow">
+                          {p.tag}
+                          {!p.isPublished && <span className="m-draft"> · Draft</span>}
+                        </span>
+                        <h3>{p.title}</h3>
+                        {(p.impact || p.tagline) && <p>{p.impact ?? p.tagline}</p>}
+                      </div>
+                      {p.budget.length > 0 && (
+                        <div className="bot" style={{ paddingBottom: 0 }}>
+                          <span className="lbl">Budget</span>
+                          <BudgetStack p={p} />
+                        </div>
+                      )}
+                      <div className="bot">
+                        <div className="m-bar">
+                          <span style={{ width: `${pct}%` }} />
+                        </div>
+                        <div className="m-row m-num">
+                          <strong>{ngn(raised)}</strong>
+                          <span style={{ color: "var(--m-muted)" }}>of {millions(p.goal)}</span>
+                        </div>
+                        <Link className="m-btn m-btn-primary m-btn-block" href={`/donations/projects/${p.slug}`}>
+                          View &amp; give
+                        </Link>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+
+          {/* Completed + your gifts */}
+          <section className="m-two-one">
+            <div className="m-stackcol" style={{ gap: 20 }}>
+              <div className="m-rule-h">
+                <h2>Completed</h2>
+              </div>
+              <div className="m-done">
+                {DONE.map((d) => (
+                  <figure key={d.title}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={d.img} alt={`${d.title}, completed`} loading="lazy" />
+                    <figcaption>
+                      <b>{d.title}</b>
+                      <span>Completed</span>
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            </div>
+            <div className="m-stackcol" style={{ gap: 20 }}>
+              <div className="m-rule-h">
+                <h2>Your gifts</h2>
+              </div>
+              <div className="m-card m-links m-num">
+                {gifts.length === 0 && (
+                  <div className="m-empty" style={{ textAlign: "left", padding: 20 }}>
+                    No gifts yet. Your receipts will appear here.
+                  </div>
+                )}
+                {gifts.slice(0, 5).map((g) => (
+                  <div
+                    key={g.id}
+                    style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "16px 20px", borderBottom: "1px solid var(--m-line-2)" }}
+                  >
+                    <span>
+                      <b style={{ display: "block" }}>
+                        {g.kind === "dues"
+                          ? `${g.period_year ?? ""} dues`.trim()
+                          : (g.project_id && titleById.get(g.project_id)) || "Project gift"}
+                      </b>
+                      <small>{shortDate(g.created_at)}</small>
+                    </span>
+                    <b>{ngn(Number(g.amount))}</b>
+                  </div>
+                ))}
+                {(isSuper || isClassAdmin) && (
+                  <Link href="/donations/reports">
+                    <span>
+                      <b>Giving reports</b>
+                      <small>By project and by class</small>
+                    </span>
+                    <span className="m-link" style={{ fontSize: 13 }}>View</span>
+                  </Link>
+                )}
+              </div>
+            </div>
+          </section>
         </div>
-
-        {/* 1 · Projects */}
-        <section className="mx-auto max-w-[1160px] px-5 pt-9 sm:px-8">
-          <Reveal>
-            <div className="mb-5 flex flex-wrap items-baseline gap-3.5">
-              <span className="flex h-6 w-6 items-center justify-center bg-gold-500 font-sans text-[12px] font-bold text-emerald-900">
-                1
-              </span>
-              <h2 className="font-display text-[26px] font-semibold text-emerald-900">
-                Support a project
-              </h2>
-              {isSuper && (
-                <Link
-                  href="/donations/manage"
-                  className="ml-auto font-sans text-[13px] font-medium text-emerald-700 hover:underline"
-                >
-                  Manage projects →
-                </Link>
-              )}
-            </div>
-          </Reveal>
-          {projects.length > 0 ? (
-            <Reveal delay={80}>
-              <ProjectCarousel projects={projects} raised={raised} />
-            </Reveal>
-          ) : (
-            <p className="border border-border bg-cream px-4 py-12 text-center font-sans text-[14px] text-ink-muted">
-              No projects are open right now. Please check back soon.
-            </p>
-          )}
-        </section>
-
-        {/* 2 · Annual dues */}
-        <section className="mx-auto max-w-[1160px] px-5 pb-16 pt-12 sm:px-8">
-          <Reveal>
-            <div className="mb-5 flex items-baseline gap-3.5">
-              <span className="flex h-6 w-6 items-center justify-center bg-gold-500 font-sans text-[12px] font-bold text-emerald-900">
-                2
-              </span>
-              <h2 className="font-display text-[26px] font-semibold text-emerald-900">
-                Your annual dues
-              </h2>
-            </div>
-          </Reveal>
-          {!myYear ? (
-            <div className="border border-border bg-cream p-6">
-              <p className="text-[15px] text-ink-soft">
-                Your graduating class isn&rsquo;t set yet, so we can&rsquo;t attach your
-                dues to a class. Ask an administrator to set it.
-              </p>
-            </div>
-          ) : (
-            <Reveal delay={80}>
-              <DuesCard
-                userEmail={user.email ?? ""}
-                year={year}
-                amount={duesAmount}
-                classLabel={classLabel}
-                paid={paidThisYear}
-                memberCount={participation.member_count}
-                paidCount={participation.paid_count}
-              />
-            </Reveal>
-          )}
-        </section>
       </main>
       <SiteFooter />
     </>

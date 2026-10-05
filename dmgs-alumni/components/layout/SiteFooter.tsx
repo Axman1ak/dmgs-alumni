@@ -1,18 +1,47 @@
+import Link from "next/link";
+
+const SCHOOL = "https://www.dohertyijero.com.ng";
+
 export function SiteFooter() {
   return (
-    <footer className="texture-diagonal mt-20 bg-emerald-900 px-5 sm:px-8 pb-6 pt-12 text-cream">
-      <div className="mx-auto max-w-[1280px] border-b border-white/10 pb-8">
-        <h5 className="mb-4 font-sans text-[11px] font-semibold uppercase tracking-[0.18em] text-gold-400">
-          Old Students Association
-        </h5>
-        <p className="max-w-md text-[14px] leading-7 opacity-80">
-          Connecting old students of Doherty Memorial Grammar School,
-          Ijero-Ekiti, across Nigeria and the diaspora. Founded 1955.
-        </p>
-      </div>
-      <div className="mx-auto flex max-w-[1280px] flex-wrap justify-between gap-2 pt-6 font-sans text-[12px] tracking-[0.04em] opacity-60">
-        <span>© {new Date().getFullYear()} DMGS Old Students Association</span>
-        <span>Ijero-Ekiti · Nigeria</span>
+    <footer className="m-foot">
+      <div className="m-wrap">
+        <div className="top">
+          <div className="about">
+            <div className="brand">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/crest.png" alt="" width={52} height={52} />
+              <span>
+                DMGS Old Students
+                <br />
+                Association
+              </span>
+            </div>
+            <p>Connecting the old students of Doherty Memorial Grammar School, Ijero-Ekiti, across Nigeria and the diaspora.</p>
+          </div>
+          <div className="cols">
+            <div>
+              <b>Association</b>
+              <Link href="/#work">Our work</Link>
+              <Link href="/#accountability">Accountability</Link>
+              <Link href="/#school">The school</Link>
+            </div>
+            <div>
+              <b>Members</b>
+              <Link href="/signup">Request membership</Link>
+              <Link href="/login">Sign in</Link>
+            </div>
+            <div>
+              <b>School</b>
+              <a href={SCHOOL} target="_blank" rel="noopener noreferrer">School website</a>
+              <a href={`${SCHOOL}/contact-us/`} target="_blank" rel="noopener noreferrer">Contact the school</a>
+            </div>
+          </div>
+        </div>
+        <div className="bottom">
+          <span>© {new Date().getFullYear()} Doherty Memorial Grammar School Old Students Association</span>
+          <span>Ijero-Ekiti · Nigeria</span>
+        </div>
       </div>
     </footer>
   );
