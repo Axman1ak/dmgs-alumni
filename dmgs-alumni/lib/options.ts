@@ -36,7 +36,45 @@ export const INTERESTS = [
   "Class coordination",
   "Volunteering on campus",
   "Sports",
+  "Football",
+  "Hiking",
+  "Gaming",
+  "Music",
+  "Reading",
+  "Travel",
+  "Cooking",
+  "Technology",
+  "Entrepreneurship",
+  "Arts & culture",
+  "Photography",
+  "Faith & community",
 ] as const;
+
+export const MAX_INTERESTS = 12;
+export const MAX_INTEREST_LEN = 30;
+
+/**
+ * Clean a free-text interest: trim, collapse spaces, cap the length and
+ * capitalise the first letter. Returns null when nothing usable is left.
+ */
+export function cleanInterest(raw: string): string | null {
+  const v = raw.replace(/[<>]/g, "").replace(/\s+/g, " ").trim().slice(0, MAX_INTEREST_LEN);
+  if (v.length < 2) return null;
+  return v.charAt(0).toUpperCase() + v.slice(1);
+}
+
+/** Dedupe interests case-insensitively, keeping the first spelling. */
+export function uniqueInterests(list: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of list) {
+    const v = cleanInterest(raw);
+    if (!v || seen.has(v.toLowerCase())) continue;
+    seen.add(v.toLowerCase());
+    out.push(v);
+  }
+  return out.slice(0, MAX_INTERESTS);
+}
 
 export type ConnectPref = "mentor" | "network" | "none";
 

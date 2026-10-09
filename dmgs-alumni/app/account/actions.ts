@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { INDUSTRIES, INTERESTS, safeUrl } from "@/lib/options";
+import { INDUSTRIES, safeUrl, uniqueInterests } from "@/lib/options";
 
 export type FormState = { error?: string; message?: string };
 
@@ -33,10 +33,8 @@ export async function updateMyProfile(
 
   const industryRaw = clean(formData.get("industry"));
   const industry = industryRaw && (INDUSTRIES as readonly string[]).includes(industryRaw) ? industryRaw : null;
-  const interests = formData
-    .getAll("interests")
-    .map((v) => String(v))
-    .filter((v) => (INTERESTS as readonly string[]).includes(v));
+  // Suggested chips plus the member's own (e.g. "Hiking", "Gaming").
+  const interests = uniqueInterests(formData.getAll("interests").map((v) => String(v)));
   const connectRaw = clean(formData.get("connect_pref"));
   const connect_pref = connectRaw && ["mentor", "network", "none"].includes(connectRaw) ? connectRaw : null;
 

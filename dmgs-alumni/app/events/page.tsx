@@ -5,6 +5,8 @@ import { EventCard } from "@/components/events/EventCard";
 import { EventForm } from "@/components/events/EventForm";
 import { createClient } from "@/lib/supabase/server";
 import type { AlumniEvent } from "@/lib/types";
+import type { Attendee } from "@/components/events/EventCard";
+import { isUpcoming } from "@/lib/events";
 
 export const dynamic = "force-dynamic";
 
@@ -37,13 +39,23 @@ export default async function EventsPage({ searchParams }: { searchParams: { tab
     if (r.profile_id === user?.id) mine.add(r.event_id);
   }
 
-  const now = Date.now();
-  const upcoming = rows.filter(
-    (e) => new Date(e.starts_at).getTime() >= now && e.status === "scheduled",
-  );
-  const past = rows.filter(
-    (e) => new Date(e.starts_at).getTime() < now || e.status === "cancelled",
-  );
+  const upcoming = rows.filter((e) => isUpcoming(e));
+  const past = rows.filter((e) => !isUpcoming(e));
+
+  // Attendee lists, for super admins only.
+  const attendeesByEvent = new Map<string, Attendee[]>();
+  if (canManage && (rsvps ?? []).length) {
+    const ids = Array.from(new Set((rsvps ?? []).map((r) => r.profile_id)));
+    const { data: people } = await supabase.from("profiles").select("id, full_name, class_year, email").in("id", ids);
+    const byId = new Map((people ?? []).map((p) => [p.id, p]));
+    for (const r of rsvps ?? []) {
+      const p = byId.get(r.profile_id);
+      const list = attendeesByEvent.get(r.event_id) ?? [];
+      list.push({ name: p?.full_name ?? "Member", classYear: p?.class_year ?? null, email: p?.email ?? null });
+      attendeesByEvent.set(r.event_id, list);
+    }
+    attendeesByEvent.forEach((l) => l.sort((a, b) => a.name.localeCompare(b.name)));
+  }
 
   past.reverse(); // most recent first
   const list = showPast ? past : upcoming;
@@ -82,6 +94,7 @@ export default async function EventsPage({ searchParams }: { searchParams: { tab
                 isGoing={mine.has(e.id)}
                 canManage={canManage}
                 past={showPast}
+                attendees={canManage ? attendeesByEvent.get(e.id) ?? [] : undefined}
               />
             ))
           )}

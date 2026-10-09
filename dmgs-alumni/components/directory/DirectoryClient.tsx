@@ -60,6 +60,12 @@ export function DirectoryClient({
   const [fCountry, setFCountry] = useState("");
   const [fIndustry, setFIndustry] = useState("");
   const [fInterest, setFInterest] = useState("");
+  // Suggested interests plus any a member typed in themselves.
+  const interestOptions = useMemo(() => {
+    const extra = new Set<string>();
+    people.forEach((p) => (p.interests ?? []).forEach((i) => { if (!(INTERESTS as readonly string[]).includes(i)) extra.add(i); }));
+    return [...INTERESTS, ...Array.from(extra).sort((a, b) => a.localeCompare(b))];
+  }, [people]);
   const [fMentor, setFMentor] = useState(false);
   const [selId, setSelId] = useState<string | null>(initialPerson);
   const [page, setPage] = useState(0);
@@ -175,7 +181,7 @@ export function DirectoryClient({
               </select>
               <select className="m-input" aria-label="Area of interest" value={fInterest} onChange={(e) => setFInterest(e.target.value)}>
                 <option value="">All interests</option>
-                {INTERESTS.map((c) => (
+                {interestOptions.map((c) => (
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>

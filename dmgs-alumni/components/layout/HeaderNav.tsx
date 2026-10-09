@@ -56,7 +56,7 @@ export function HeaderNav({
   }
 
   // Super admins manage members; class admins only see giving reports.
-  const manageHref = isSuperAdmin ? "/admin" : isAdmin ? "/donations/reports" : null;
+  const manageHref = isSuperAdmin ? "/admin" : isAdmin ? "/admin?tab=giving" : null;
   const onManage = pathname.startsWith("/admin") || pathname.startsWith("/donations/reports") || pathname.startsWith("/donations/manage");
 
   const active = (href: string) => {

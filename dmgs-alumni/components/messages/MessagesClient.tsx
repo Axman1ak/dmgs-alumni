@@ -39,7 +39,9 @@ export function MessagesClient({
   const [draft, setDraft] = useState(initialDraft);
   const [showNew, setShowNew] = useState(false);
   const [sending, setSending] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  // Scroll the message list itself, never the page: scrollIntoView() would
+  // also scroll the window down to the thread.
+  const listRef = useRef<HTMLDivElement>(null);
 
   const nameMap = useMemo(() => {
     const m = new Map<string, string>([[me, myName]]);
@@ -102,8 +104,9 @@ export function MessagesClient({
   }, [activeId, supabase, me, markRead]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    const el = listRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages, activeId]);
 
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -220,7 +223,7 @@ export function MessagesClient({
                   </div>
                 </div>
 
-                <div className="list">
+                <div className="list" ref={listRef}>
                   {messages.length === 0 && (
                     <p style={{ color: "var(--m-muted)" }}>
                       {active.type === "direct"
@@ -247,7 +250,6 @@ export function MessagesClient({
                       </div>
                     );
                   })}
-                  <div ref={bottomRef} />
                 </div>
 
                 {readOnly ? (

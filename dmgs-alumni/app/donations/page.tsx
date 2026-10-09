@@ -4,9 +4,10 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { DuesCard } from "@/components/donations/DuesCard";
 import { ProjectArt } from "@/components/donations/ProjectArt";
+import { ShowMore } from "@/components/donations/ShowMore";
 import { createClient } from "@/lib/supabase/server";
 import { mapProject, type Project } from "@/lib/projects";
-import { ngn, shortDate } from "@/lib/format";
+import { ngn } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,8 @@ const DONE = [
   { title: "Borehole & water tower", img: "/img/water-after.jpg" },
   { title: "Principal's house", img: "/img/house-after.jpg" },
 ];
+
+const PER_PAGE = 3;
 
 const COLORS = ["#0e3b2e", "#1f6a52", "#c9973f", "#8fb8a3", "#4d5358", "#d9b36a"];
 
@@ -40,6 +43,43 @@ function BudgetStack({ p }: { p: Project }) {
   );
 }
 
+function ProjectCard({ p, raised }: { p: Project; raised: number }) {
+  const pct = p.goal > 0 ? Math.min(100, Math.round((raised / p.goal) * 100)) : 0;
+  return (
+    <article key={p.id} className="m-card m-pcard">
+      <div className="ph">
+        <ProjectArt project={p} className="h-full w-full" />
+      </div>
+      <div className="top">
+        <span className="m-eyebrow">
+          {p.tag}
+          {!p.isPublished && <span className="m-draft"> · Draft</span>}
+        </span>
+        <h3>{p.title}</h3>
+        {(p.impact || p.tagline) && <p>{p.impact ?? p.tagline}</p>}
+      </div>
+      {p.budget.length > 0 && (
+        <div className="bot" style={{ paddingBottom: 0 }}>
+          <span className="lbl">Budget</span>
+          <BudgetStack p={p} />
+        </div>
+      )}
+      <div className="bot">
+        <div className="m-bar">
+          <span style={{ width: `${pct}%` }} />
+        </div>
+        <div className="m-row m-num">
+          <strong>{ngn(raised)}</strong>
+          <span style={{ color: "var(--m-muted)" }}>of {millions(p.goal)}</span>
+        </div>
+        <Link className="m-btn m-btn-primary m-btn-block" href={`/donations/projects/${p.slug}`}>
+          View &amp; give
+        </Link>
+      </div>
+    </article>
+  );
+}
+
 export default async function DonationsPage() {
   const supabase = createClient();
   const {
@@ -55,7 +95,6 @@ export default async function DonationsPage() {
     .eq("id", user.id)
     .single();
   const isSuper = profile?.role === "super_admin";
-  const isClassAdmin = profile?.role === "class_admin";
 
   // My graduating class + label.
   const { data: myAlum } = await supabase
@@ -103,13 +142,11 @@ export default async function DonationsPage() {
   // My own successful gifts (readable under RLS).
   const { data: myGifts } = await supabase
     .from("donations")
-    .select("id, amount, kind, project_id, period_year, created_at")
+    .select("amount")
     .eq("donor_profile_id", user.id)
-    .eq("status", "success")
-    .order("created_at", { ascending: false });
+    .eq("status", "success");
   const gifts = myGifts ?? [];
   const myTotal = gifts.reduce((s, g) => s + Number(g.amount), 0);
-  const titleById = new Map(projects.map((p) => [p.id, p.title]));
 
   return (
     <>
@@ -161,7 +198,7 @@ export default async function DonationsPage() {
                 {isSuper && (
                   <>
                     {projects.length > 0 && " · "}
-                    <Link className="m-link" href="/donations/manage">Manage projects</Link>
+                    <Link className="m-link" href="/admin?tab=projects">Manage projects</Link>
                   </>
                 )}
               </span>
@@ -170,102 +207,36 @@ export default async function DonationsPage() {
               <div className="m-card m-empty">No projects are open right now. Please check back soon.</div>
             ) : (
               <div className="m-grid3">
-                {projects.map((p) => {
-                  const raised = totalById.get(p.id) ?? 0;
-                  const pct = p.goal > 0 ? Math.min(100, Math.round((raised / p.goal) * 100)) : 0;
-                  return (
-                    <article key={p.id} className="m-card m-pcard">
-                      <div className="ph">
-                        <ProjectArt project={p} className="h-full w-full" />
-                      </div>
-                      <div className="top">
-                        <span className="m-eyebrow">
-                          {p.tag}
-                          {!p.isPublished && <span className="m-draft"> · Draft</span>}
-                        </span>
-                        <h3>{p.title}</h3>
-                        {(p.impact || p.tagline) && <p>{p.impact ?? p.tagline}</p>}
-                      </div>
-                      {p.budget.length > 0 && (
-                        <div className="bot" style={{ paddingBottom: 0 }}>
-                          <span className="lbl">Budget</span>
-                          <BudgetStack p={p} />
-                        </div>
-                      )}
-                      <div className="bot">
-                        <div className="m-bar">
-                          <span style={{ width: `${pct}%` }} />
-                        </div>
-                        <div className="m-row m-num">
-                          <strong>{ngn(raised)}</strong>
-                          <span style={{ color: "var(--m-muted)" }}>of {millions(p.goal)}</span>
-                        </div>
-                        <Link className="m-btn m-btn-primary m-btn-block" href={`/donations/projects/${p.slug}`}>
-                          View &amp; give
-                        </Link>
-                      </div>
-                    </article>
-                  );
-                })}
+                {projects.slice(0, PER_PAGE).map((p) => (
+                  <ProjectCard key={p.id} p={p} raised={totalById.get(p.id) ?? 0} />
+                ))}
               </div>
             )}
+            <ShowMore count={Math.max(0, projects.length - PER_PAGE)} label="See more projects">
+              <div className="m-grid3">
+                {projects.slice(PER_PAGE).map((p) => (
+                  <ProjectCard key={p.id} p={p} raised={totalById.get(p.id) ?? 0} />
+                ))}
+              </div>
+            </ShowMore>
           </section>
 
-          {/* Completed + your gifts */}
-          <section className="m-two-one">
-            <div className="m-stackcol" style={{ gap: 20 }}>
-              <div className="m-rule-h">
-                <h2>Completed</h2>
-              </div>
-              <div className="m-done">
-                {DONE.map((d) => (
-                  <figure key={d.title}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={d.img} alt={`${d.title}, completed`} loading="lazy" />
-                    <figcaption>
-                      <b>{d.title}</b>
-                      <span>Completed</span>
-                    </figcaption>
-                  </figure>
-                ))}
-              </div>
+          {/* Completed */}
+          <section className="m-stackcol" style={{ gap: 20 }}>
+            <div className="m-rule-h">
+              <h2>Completed</h2>
             </div>
-            <div className="m-stackcol" style={{ gap: 20 }}>
-              <div className="m-rule-h">
-                <h2>Your gifts</h2>
-              </div>
-              <div className="m-card m-links m-num">
-                {gifts.length === 0 && (
-                  <div className="m-empty" style={{ textAlign: "left", padding: 20 }}>
-                    No gifts yet. Your receipts will appear here.
-                  </div>
-                )}
-                {gifts.slice(0, 5).map((g) => (
-                  <div
-                    key={g.id}
-                    style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "16px 20px", borderBottom: "1px solid var(--m-line-2)" }}
-                  >
-                    <span>
-                      <b style={{ display: "block" }}>
-                        {g.kind === "dues"
-                          ? `${g.period_year ?? ""} dues`.trim()
-                          : (g.project_id && titleById.get(g.project_id)) || "Project gift"}
-                      </b>
-                      <small>{shortDate(g.created_at)}</small>
-                    </span>
-                    <b>{ngn(Number(g.amount))}</b>
-                  </div>
-                ))}
-                {(isSuper || isClassAdmin) && (
-                  <Link href="/donations/reports">
-                    <span>
-                      <b>Giving reports</b>
-                      <small>By project and by class</small>
-                    </span>
-                    <span className="m-link" style={{ fontSize: 13 }}>View</span>
-                  </Link>
-                )}
-              </div>
+            <div className="m-done">
+              {DONE.map((d) => (
+                <figure key={d.title}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={d.img} alt={`${d.title}, completed`} loading="lazy" />
+                  <figcaption>
+                    <b>{d.title}</b>
+                    <span>Completed</span>
+                  </figcaption>
+                </figure>
+              ))}
             </div>
           </section>
         </div>

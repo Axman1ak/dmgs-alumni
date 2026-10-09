@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useFormState, useFormStatus } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
 import { updateMyProfile, savePhotoUrl, type FormState } from "@/app/account/actions";
-import { CONNECT, COUNTRIES, INDUSTRIES, INTERESTS, initials, type ConnectPref } from "@/lib/options";
+import { CONNECT, COUNTRIES, INDUSTRIES, INTERESTS, MAX_INTERESTS, cleanInterest, initials, type ConnectPref } from "@/lib/options";
 import { profileChecks } from "@/lib/completeness";
 
 export type MyListing = {
@@ -81,6 +81,16 @@ export function ProfileEditForm({ person, memberSince }: { person: MyListing; me
     email: person.email ?? "",
   });
   const [interests, setInterests] = useState<string[]>(person.interests ?? []);
+  const [customInterest, setCustomInterest] = useState("");
+  const addInterest = () => {
+    const v = cleanInterest(customInterest);
+    if (!v) return;
+    setInterests((cur) =>
+      cur.some((i) => i.toLowerCase() === v.toLowerCase()) || cur.length >= MAX_INTERESTS ? cur : [...cur, v],
+    );
+    setCustomInterest("");
+  };
+  const custom = interests.filter((i) => !(INTERESTS as readonly string[]).includes(i));
   const [connect, setConnect] = useState<ConnectPref | "">(person.connect_pref ?? "");
   const [emailShared, setEmailShared] = useState(person.email_shared);
 
@@ -209,7 +219,34 @@ export function ProfileEditForm({ person, memberSince }: { person: MyListing; me
                     </button>
                   );
                 })}
+                {custom.map((x) => (
+                  <button key={x} type="button" className="m-chip-btn" aria-pressed onClick={() => setInterests((cur) => cur.filter((i) => i !== x))} title="Remove">
+                    {x} ×
+                  </button>
+                ))}
                 {interests.map((x) => <input key={x} type="hidden" name="interests" value={x} />)}
+              </div>
+              <div className="m-full" style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                <label className="m-sr" htmlFor="p-interest">Add your own interest</label>
+                <input
+                  id="p-interest"
+                  className="m-input"
+                  style={{ maxWidth: 320 }}
+                  value={customInterest}
+                  maxLength={30}
+                  placeholder="Add your own, e.g. Chess"
+                  onChange={(e) => setCustomInterest(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      addInterest();
+                    }
+                  }}
+                />
+                <button type="button" className="m-btn m-btn-line m-btn-sm" onClick={addInterest} disabled={interests.length >= MAX_INTERESTS}>
+                  Add
+                </button>
+                <span className="m-hint">{interests.length} of {MAX_INTERESTS} chosen</span>
               </div>
             </fieldset>
 

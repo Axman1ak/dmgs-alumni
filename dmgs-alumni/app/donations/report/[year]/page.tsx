@@ -71,8 +71,8 @@ export default async function ClassReportPage({
   return (
     <div className="mx-auto max-w-[820px] px-5 py-10 sm:px-8 sm:py-12 print:py-0">
       <div className="mb-8 flex items-center justify-between print:hidden">
-        <Link href="/donations" className="font-sans text-[13px] text-emerald-700 hover:underline">
-          ← Back to donations
+        <Link href="/admin?tab=giving&view=classes" className="font-sans text-[13px] text-emerald-700 hover:underline">
+          ← Back to giving reports
         </Link>
         <PrintButton />
       </div>

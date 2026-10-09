@@ -25,7 +25,7 @@ export function SupportedProjects({
         </h2>
         {canManage ? (
           <Link
-            href="/donations/manage"
+            href="/admin?tab=projects"
             className="font-sans text-[12px] font-semibold uppercase tracking-[0.1em] text-emerald-700 hover:underline"
           >
             Manage projects →

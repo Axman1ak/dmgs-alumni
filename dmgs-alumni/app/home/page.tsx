@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server";
 import { rsvpToggle } from "@/app/events/actions";
 import { profilePct } from "@/lib/completeness";
 import { initials } from "@/lib/options";
+import { startOfTodayLagos } from "@/lib/events";
 
 export const dynamic = "force-dynamic";
 
@@ -55,7 +56,7 @@ export default async function HomePage() {
     supabase.rpc("project_totals"),
     supabase.from("annual_dues").select("amount").eq("year", year).maybeSingle(),
     supabase.rpc("class_dues_participation", { p_year: year }),
-    supabase.from("events").select("id, title, starts_at, format, location").eq("status", "scheduled").gte("starts_at", new Date().toISOString()).order("starts_at").limit(3),
+    supabase.from("events").select("id, title, starts_at, format, location").eq("status", "scheduled").gte("starts_at", startOfTodayLagos()).order("starts_at").limit(3),
     supabase.from("event_rsvps").select("event_id").eq("profile_id", user.id),
     classYear
       ? supabase.from("alumni").select("id", { count: "exact", head: true }).eq("class_year", classYear)
@@ -86,6 +87,10 @@ export default async function HomePage() {
   const raised = new Map<string, number>((totals ?? []).map((t: { project_id: string; total: number | string }) => [t.project_id, Number(t.total)]));
   const projects = (projRows ?? []).map((p) => ({ ...p, goal: Number(p.goal), raised: raised.get(p.id) ?? 0, mine: byProject.get(p.id) ?? 0 }));
   const supported = projects.filter((p) => p.mine > 0).length;
+  // Gifts not tied to a project (early gifts, general fund).
+  const general = giftRows.filter((g) => g.kind === "project" && !g.project_id).reduce((s, g) => s + Number(g.amount), 0);
+  // Projects you supported first, so a gift is never hidden behind the first three.
+  const shown = [...projects.filter((p) => p.mine > 0), ...projects.filter((p) => p.mine === 0)].slice(0, general > 0 ? 2 : 3);
 
   const participation = (part?.[0] ?? { member_count: 0, paid_count: 0 }) as { member_count: number; paid_count: number };
   const joinedCount = participation.member_count;
@@ -147,7 +152,17 @@ export default async function HomePage() {
               </div>
             )}
             <div className="m-im-proj">
-              {projects.slice(0, 3).map((p) =>
+              {general > 0 && (
+                <Link className="m-ip on" href="/donations">
+                  <span className="m-ip-img" />
+                  <span className="m-ip-t">
+                    <b>General fund</b>
+                    <span>You gave {naira(general)}</span>
+                    <span className="m-ip-s">Used where the school needs it most</span>
+                  </span>
+                </Link>
+              )}
+              {shown.map((p) =>
                 p.mine > 0 || total === 0 ? (
                   <Link key={p.id} className="m-ip on" href={`/donations/projects/${p.slug}`}>
                     <span className="m-ip-img">
