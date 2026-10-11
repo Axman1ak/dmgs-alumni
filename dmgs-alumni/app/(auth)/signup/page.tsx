@@ -121,6 +121,7 @@ export default function SignupPage() {
               onChange={setLastName}
             />
           </div>
+          <Field name="maiden_name" label="Maiden name (if your surname has changed)" autoComplete="off" />
           <Field
             name="email"
             label="Email address *"
@@ -164,12 +165,6 @@ export default function SignupPage() {
             </select>
           </div>
 
-          <Field name="occupation" label="Profession" autoComplete="organization-title" />
-
-          <div className="grid grid-cols-1 gap-x-3 sm:grid-cols-2">
-            <Field name="city" label="City" autoComplete="address-level2" />
-            <Field name="state" label="State / Province" autoComplete="address-level1" />
-          </div>
           <div className="grid grid-cols-1 gap-x-3 sm:grid-cols-2">
             <Field
               name="country"
@@ -178,15 +173,11 @@ export default function SignupPage() {
               value={country}
               onChange={setCountry}
             />
-            <Field name="phone" label="Phone" type="tel" autoComplete="tel" />
+            <Field name="state" label="State / Region" autoComplete="address-level1" />
           </div>
-
-          <div className="mb-5">
-            <label htmlFor="bio" className="field-label">
-              About you
-            </label>
-            <textarea id="bio" name="bio" rows={3} className="field-input" />
-          </div>
+          <p className="mb-5 font-sans text-[13px] leading-relaxed text-ink-muted">
+            Your work, interests and links can be added to your profile once your membership is approved.
+          </p>
         </div>
 
         {/* ---------------- Step 3 — identity check ---------------- */}

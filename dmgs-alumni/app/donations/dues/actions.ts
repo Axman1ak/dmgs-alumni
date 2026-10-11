@@ -41,6 +41,8 @@ export async function setDuesAmount(
   );
   if (error) return { error: error.message };
 
-  revalidatePath("/donations/dues");
+  revalidatePath("/donations");
+  revalidatePath("/home");
+  revalidatePath("/admin");
   return { message: `Dues for ${year} set to ${amount.toLocaleString()} NGN.` };
 }

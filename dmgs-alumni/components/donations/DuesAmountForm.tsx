@@ -1,9 +1,7 @@
 "use client";
 
-import { useFormState } from "react-dom";
+import { useFormState, useFormStatus } from "react-dom";
 import { setDuesAmount, type DuesState } from "@/app/donations/dues/actions";
-import { SubmitButton } from "@/components/auth/SubmitButton";
-import { FormNotice } from "@/components/auth/AuthCard";
 
 const initial: DuesState = {};
 
@@ -12,40 +10,31 @@ export function DuesAmountForm({ year, amount }: { year: number; amount: number 
   const [state, action] = useFormState(setDuesAmount, initial);
 
   return (
-    <div className="border border-dashed border-emerald-700/40 bg-emerald-900/[0.03] p-5">
-      <p className="mb-1 font-sans text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-800">
-        Administrator · annual dues
-      </p>
-      <p className="mb-4 font-sans text-[13px] text-ink-muted">
-        Set the amount every member pays for their class this year.
-      </p>
-      {state.error && <FormNotice tone="error">{state.error}</FormNotice>}
-      {state.message && <FormNotice>{state.message}</FormNotice>}
-      <form action={action} className="flex flex-wrap items-end gap-3">
-        <div>
-          <label htmlFor="year" className="field-label">Year</label>
-          <input
-            id="year"
-            name="year"
-            type="number"
-            defaultValue={year}
-            className="field-input w-[120px]"
-          />
-        </div>
-        <div>
-          <label htmlFor="amount" className="field-label">Amount (₦)</label>
-          <input
-            id="amount"
-            name="amount"
-            type="number"
-            min={1}
-            defaultValue={amount ?? ""}
-            placeholder="e.g. 5000"
-            className="field-input w-[160px]"
-          />
-        </div>
-        <SubmitButton>Save amount</SubmitButton>
-      </form>
-    </div>
+    <form action={action} className="m-card" style={{ padding: "20px 22px", display: "flex", flexWrap: "wrap", gap: 14, alignItems: "flex-end" }}>
+      <div style={{ flex: "1 1 220px" }}>
+        <b style={{ display: "block" }}>Annual dues</b>
+        <span style={{ fontSize: 13, color: "var(--m-muted)" }}>The amount every member pays for their class.</span>
+      </div>
+      <div className="m-field">
+        <label htmlFor="dues-year">Year</label>
+        <input id="dues-year" name="year" type="number" defaultValue={year} className="m-input" style={{ width: 110 }} />
+      </div>
+      <div className="m-field">
+        <label htmlFor="dues-amount">Amount (₦)</label>
+        <input id="dues-amount" name="amount" type="number" min={1} defaultValue={amount ?? ""} placeholder="e.g. 5000" className="m-input" style={{ width: 150 }} />
+      </div>
+      <SaveButton />
+      {state.error && <p className="m-error" style={{ flexBasis: "100%" }}>{state.error}</p>}
+      {state.message && <p className="m-toast" style={{ flexBasis: "100%" }}>{state.message}</p>}
+    </form>
+  );
+}
+
+function SaveButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" className="m-btn m-btn-primary" disabled={pending}>
+      {pending ? "Saving…" : "Save amount"}
+    </button>
   );
 }

@@ -1,27 +1,19 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Fraunces, Inter } from "next/font/google";
+import { Source_Serif_4, Public_Sans } from "next/font/google";
 import "./globals.css";
 
-const cormorant = Cormorant_Garamond({
+// Typefaces (2026 redesign).
+const sourceSerif = Source_Serif_4({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  variable: "--font-ss",
+  display: "swap",
+});
+
+const publicSans = Public_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-cormorant",
-  display: "swap",
-});
-
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  style: ["normal", "italic"],
-  variable: "--font-fraunces",
-  display: "swap",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-inter",
+  variable: "--font-ps",
   display: "swap",
 });
 
@@ -39,7 +31,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${cormorant.variable} ${fraunces.variable} ${inter.variable}`}
+      className={`${sourceSerif.variable} ${publicSans.variable}`}
     >
       <body>{children}</body>
     </html>

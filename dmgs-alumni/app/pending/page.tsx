@@ -25,38 +25,43 @@ export default async function PendingPage() {
   const rejected = profile?.status === "rejected";
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-6 text-center">
-      <Crest size={80} />
-      <h1 className="mt-8 font-display text-[40px] font-medium text-emerald-900">
-        {rejected ? "Membership not approved" : "Awaiting approval"}
-      </h1>
-      <p className="mt-4 max-w-[480px] text-[16px] leading-relaxed text-ink-soft">
-        {rejected ? (
-          <>
-            We couldn&rsquo;t verify your membership at this time. If you believe
-            this is a mistake, please reach out to the association&rsquo;s
-            administrators.
-          </>
-        ) : (
-          <>
-            Thanks{profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}.
-            Your request is with our administrators for verification. You&rsquo;ll
-            be able to sign in as soon as it&rsquo;s approved. There is no need
-            to do anything else.
-          </>
-        )}
-      </p>
-
-      <div className="mt-9 flex items-center gap-3">
-        <form action={signOut}>
-          <button type="submit" className="btn btn-outline">
-            Sign out
-          </button>
-        </form>
-        <Link href="/" className="btn btn-primary">
-          Return home
-        </Link>
-      </div>
+    <div className="m-app" style={{ display: "flex", minHeight: "100vh", flexDirection: "column" }}>
+      <header className="m-head" style={{ position: "static" }}>
+        <div className="m-wrap m-head-in">
+          <Link href="/" className="m-brand">
+            <Crest size={42} />
+            <span>DMGS Old Students</span>
+          </Link>
+        </div>
+      </header>
+      <main style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "48px 16px" }}>
+        <div className="m-card" style={{ maxWidth: 520, padding: "36px 32px", display: "flex", flexDirection: "column", gap: 16 }}>
+          <span className="m-eyebrow">{rejected ? "Membership" : "Request received"}</span>
+          <h1 style={{ fontSize: 32, color: "var(--m-emerald)" }}>
+            {rejected ? "Membership not approved" : "Awaiting approval"}
+          </h1>
+          <p style={{ lineHeight: 1.6, color: "#4d5358" }}>
+            {rejected ? (
+              <>
+                We could not verify your membership. If you believe this is a mistake, please contact the
+                association&rsquo;s administrators.
+              </>
+            ) : (
+              <>
+                Thank you{profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}. An administrator will check
+                your details against the register, usually within a few days. Once you are approved, sign in again to
+                reach the member area and complete the rest of your profile.
+              </>
+            )}
+          </p>
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 8 }}>
+            <Link href="/" className="m-btn m-btn-primary">Return to the home page</Link>
+            <form action={signOut}>
+              <button type="submit" className="m-btn m-btn-line">Sign out</button>
+            </form>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

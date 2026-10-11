@@ -26,13 +26,13 @@ export function MemberRow({
   const [role, setRole] = useState(member.role);
 
   return (
-    <div className="grid grid-cols-1 items-center gap-3 border-b border-border px-5 py-4 last:border-b-0 md:grid-cols-[1.4fr_1fr_0.8fr_0.8fr_auto_auto]">
+    <div className="grid grid-cols-1 items-center gap-3 border-b border-border px-5 py-4 last:border-b-0 bg-white md:grid-cols-[1.4fr_1fr_0.8fr_0.8fr_auto_auto]">
       {/* Role form. `contents` lets its children sit directly in the grid. */}
       <form action={action} className="contents">
         <input type="hidden" name="id" value={member.id} />
 
         <div>
-          <p className="font-display text-[17px] font-semibold text-emerald-900">
+          <p style={{ fontWeight: 700, color: "var(--m-ink)" }}>
             {member.full_name}
           </p>
           <p className="font-sans text-[12px] text-ink-muted">{member.email ?? "-"}</p>
@@ -71,7 +71,7 @@ export function MemberRow({
           className="rounded-sm border border-border bg-paper px-2.5 py-3 font-sans text-[16px] md:text-[13px] disabled:opacity-40"
         />
 
-        <button type="submit" className="btn btn-primary px-4 py-2 text-[12px]">
+        <button type="submit" className="m-btn m-btn-primary m-btn-sm">
           Save
         </button>
       </form>
@@ -93,7 +93,7 @@ export function MemberRow({
           type="submit"
           disabled={isSelf}
           title={isSelf ? "You can't delete your own account" : "Delete this member"}
-          className="btn btn-danger px-4 py-2 text-[12px] disabled:cursor-not-allowed disabled:opacity-30"
+          className="m-btn m-btn-line m-btn-sm" style={{ color: "#8a2a2a" }}
         >
           Delete
         </button>

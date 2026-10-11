@@ -4,8 +4,9 @@ import { HeaderNav } from "./HeaderNav";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Top ribbon + sticky header. The interactive nav (user menu, mobile
- * hamburger) lives in the HeaderNav client component.
+ * Site header (2026 redesign). Server part: who is signed in, their role,
+ * pending approvals and unread messages. The interactive menu lives in
+ * HeaderNav.
  */
 export async function SiteHeader() {
   const supabase = createClient();
@@ -17,10 +18,12 @@ export async function SiteHeader() {
   let isSuperAdmin = false;
   let isAdmin = false;
   let pendingCount = 0;
+  let unread = 0;
+
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("full_name, role")
+      .select("full_name, role, status")
       .eq("id", user.id)
       .single();
     isSuperAdmin = profile?.role === "super_admin";
@@ -32,50 +35,48 @@ export async function SiteHeader() {
         .eq("status", "pending");
       pendingCount = count ?? 0;
     }
+
+    // Unread messages: anything newer than my last read in each of my chats.
+    if (profile?.status === "approved") {
+      const { data: memberships } = await supabase
+        .from("chat_members")
+        .select("chat_id, last_read_at")
+        .eq("profile_id", user.id);
+      const lastRead = new Map((memberships ?? []).map((m) => [m.chat_id, m.last_read_at as string]));
+      const since = (memberships ?? []).map((m) => m.last_read_at as string).sort()[0];
+      if (lastRead.size && since) {
+        const { data: recent } = await supabase
+          .from("messages")
+          .select("chat_id, sender_id, created_at")
+          .in("chat_id", Array.from(lastRead.keys()))
+          .gt("created_at", since)
+          .neq("sender_id", user.id)
+          .limit(200);
+        unread = (recent ?? []).filter((m) => m.created_at > (lastRead.get(m.chat_id) ?? "")).length;
+      }
+    }
+
     const name = profile?.full_name ?? user.email ?? "";
-    initials = name
-      .split(" ")
-      .map((p: string) => p[0])
-      .filter(Boolean)
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
+    const words = name.trim().split(/\s+/);
+    initials = ((words[0]?.[0] ?? "") + (words.length > 1 ? words[words.length - 1][0] : "")).toUpperCase();
   }
 
   return (
-    <>
-      {/* Top ribbon */}
-      <div className="bg-emerald-900 py-2 font-sans text-[12px] uppercase tracking-[0.08em] text-cream">
-        <div className="mx-auto flex max-w-[1280px] items-center justify-between px-8">
-          <span className="opacity-75">Doherty Memorial Grammar School · Est. 1955</span>
-          <span className="hidden opacity-75 sm:inline">Ijero-Ekiti, Nigeria</span>
-        </div>
+    <header className="m-head">
+      <div className="m-wrap m-head-in" style={{ position: "relative" }}>
+        <Link href={user ? "/home" : "/"} className="m-brand">
+          <Crest size={42} />
+          <span>DMGS Old Students</span>
+        </Link>
+        <HeaderNav
+          signedIn={Boolean(user)}
+          initials={initials}
+          isSuperAdmin={isSuperAdmin}
+          isAdmin={isAdmin}
+          pendingCount={pendingCount}
+          unread={unread}
+        />
       </div>
-
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-border bg-cream/90 backdrop-blur">
-        <div className="relative mx-auto flex max-w-[1280px] items-center gap-3 px-5 py-4 md:gap-8 md:px-8 md:py-5">
-          <Link href="/" className="flex items-center gap-3.5 no-underline">
-            <Crest />
-            <span>
-              <span className="block font-display text-[20px] font-semibold leading-none text-emerald-900 md:text-[22px]">
-                Old Students Association
-              </span>
-              <span className="mt-1 hidden font-sans text-[10px] uppercase tracking-[0.18em] text-ink-muted sm:block">
-                Doherty Memorial Grammar School
-              </span>
-            </span>
-          </Link>
-
-          <HeaderNav
-            signedIn={Boolean(user)}
-            initials={initials}
-            isSuperAdmin={isSuperAdmin}
-            isAdmin={isAdmin}
-            pendingCount={pendingCount}
-          />
-        </div>
-      </header>
-    </>
+    </header>
   );
 }

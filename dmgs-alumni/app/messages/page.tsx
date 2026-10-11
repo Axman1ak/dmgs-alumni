@@ -1,12 +1,17 @@
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { MessagesClient } from "@/components/messages/MessagesClient";
 import { createClient } from "@/lib/supabase/server";
 import type { Conversation, MemberName } from "@/components/messages/types";
 
 export const dynamic = "force-dynamic";
 
-export default async function MessagesPage() {
+export default async function MessagesPage({
+  searchParams,
+}: {
+  searchParams: { to?: string; mentor?: string };
+}) {
   const supabase = createClient();
   const {
     data: { user },
@@ -14,10 +19,19 @@ export default async function MessagesPage() {
   if (!user) redirect("/login");
   const me = user.id;
 
+  // Opened from a directory profile: find or create the direct chat first,
+  // so it is already in the list below.
+  let openChatId: string | null = null;
+  const to = searchParams.to;
+  if (to && /^[0-9a-f-]{36}$/i.test(to) && to !== me) {
+    const { data: chatId } = await supabase.rpc("get_or_create_direct_chat", { p_other: to });
+    if (typeof chatId === "string") openChatId = chatId;
+  }
+
   const [{ data: profile }, { data: memberships }, { data: broadcast }] =
     await Promise.all([
       supabase.from("profiles").select("role").eq("id", me).single(),
-      supabase.from("chat_members").select("chat_id, last_read_at").eq("profile_id", me),
+      supabase.from("chat_members").select("chat_id, last_read_at, cleared_at").eq("profile_id", me),
       supabase
         .from("chats")
         .select("id, type, title")
@@ -30,6 +44,10 @@ export default async function MessagesPage() {
   const myChatIds = (memberships ?? []).map((m) => m.chat_id);
   const lastRead = new Map(
     (memberships ?? []).map((m) => [m.chat_id, m.last_read_at as string]),
+  );
+  // Conversations the member deleted for themselves: hide everything before.
+  const clearedAt = new Map(
+    (memberships ?? []).filter((m) => m.cleared_at).map((m) => [m.chat_id, m.cleared_at as string]),
   );
 
   // Chats I belong to.
@@ -71,6 +89,8 @@ export default async function MessagesPage() {
   const lastMsg = new Map<string, { body: string; created_at: string }>();
   const unread = new Map<string, number>();
   for (const m of msgs ?? []) {
+    const cleared = clearedAt.get(m.chat_id);
+    if (cleared && m.created_at <= cleared) continue;
     if (!lastMsg.has(m.chat_id)) {
       lastMsg.set(m.chat_id, { body: m.body, created_at: m.created_at });
     }
@@ -95,13 +115,18 @@ export default async function MessagesPage() {
   }
 
   const conversations: Conversation[] = [
-    ...(myChats ?? []).map((c) => ({
+    ...(myChats ?? [])
+      // Deleted by me and nothing new since: keep hidden (unless opened from
+      // a directory profile just now).
+      .filter((c) => !clearedAt.has(c.id) || lastMsg.has(c.id) || c.id === openChatId)
+      .map((c) => ({
       id: c.id,
       type: c.type as Conversation["type"],
       name: label(c),
       lastMessage: lastMsg.get(c.id)?.body ?? null,
       lastAt: lastMsg.get(c.id)?.created_at ?? null,
       unread: unread.get(c.id) ?? 0,
+      clearedAt: clearedAt.get(c.id) ?? null,
     })),
   ];
 
@@ -131,7 +156,10 @@ export default async function MessagesPage() {
         isSuperAdmin={isSuperAdmin}
         conversations={conversations}
         directory={(directory ?? []) as MemberName[]}
+        initialActiveId={openChatId}
+        initialDraft={openChatId && searchParams.mentor ? "Hello, I saw you are open to mentoring. Could I ask your advice about " : ""}
       />
+      <SiteFooter />
     </>
   );
 }

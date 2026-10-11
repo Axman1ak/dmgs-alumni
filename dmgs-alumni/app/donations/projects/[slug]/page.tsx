@@ -3,14 +3,14 @@ import { notFound, redirect } from "next/navigation";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { ProjectArt } from "@/components/donations/ProjectArt";
-import { BudgetBreakdown } from "@/components/donations/BudgetBreakdown";
 import { GiveForm } from "@/components/donations/GiveForm";
-import { Reveal } from "@/components/donations/Reveal";
 import { mapProject } from "@/lib/projects";
 import { createClient } from "@/lib/supabase/server";
 import { ngn } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
+
+const COLORS = ["#0e3b2e", "#1f6a52", "#c9973f", "#8fb8a3", "#4d5358", "#d9b36a"];
 
 export default async function ProjectPage({ params }: { params: { slug: string } }) {
   const supabase = createClient();
@@ -49,149 +49,122 @@ export default async function ProjectPage({ params }: { params: { slug: string }
     myClassLabel = cls?.label ?? null;
   }
 
-  const { data: otherRows } = await supabase
-    .from("projects")
-    .select("*")
-    .neq("slug", params.slug)
-    .order("sort_order");
+  const [{ data: otherRows }, { data: totalsRows }] = await Promise.all([
+    supabase.from("projects").select("*").neq("slug", params.slug).eq("is_published", true).order("sort_order"),
+    supabase.rpc("project_totals"),
+  ]);
   const others = (otherRows ?? []).map(mapProject);
+  const raised = Number(
+    (totalsRows ?? []).find((t: { project_id: string }) => t.project_id === project.id)?.total ?? 0,
+  );
+  const pct = project.goal > 0 ? Math.min(100, Math.round((raised / project.goal) * 100)) : 0;
+  const budgetTotal = project.budget.reduce((s, b) => s + b.amount, 0) || project.goal || 1;
+  const [lead, ...rest] = project.idea;
 
   return (
     <>
       <SiteHeader />
-      <main>
-        {/* Cinematic hero */}
-        <section className="relative h-[42vh] min-h-[300px] sm:h-[62vh] sm:min-h-[420px] w-full overflow-hidden">
-          <ProjectArt project={project} className="absolute inset-0 h-full w-full" />
-          <div className="absolute inset-0 bg-gradient-to-t from-emerald-900 via-emerald-900/50 to-emerald-900/10" />
-          <div className="absolute inset-x-0 bottom-0 mx-auto max-w-[1100px] px-5 sm:px-8 pb-12">
-            <div className="animate-fadeIn">
-              <Link
-                href="/donations"
-                className="mb-4 inline-block font-sans text-[12px] uppercase tracking-[0.14em] text-cream/80 hover:text-gold-400"
-              >
-                ← All giving
-              </Link>
-              <p className="mb-2 font-sans text-[12px] font-semibold uppercase tracking-[0.2em] text-gold-400">
-                {project.tag}
-              </p>
-              <h1 className="max-w-[820px] font-display text-[clamp(28px,6vw,64px)] font-medium leading-[1.02] text-cream">
-                {project.title}
-              </h1>
-              <p className="mt-4 max-w-[560px] font-serif text-[19px] italic text-cream/85">
-                {project.tagline}
-              </p>
-            </div>
+      <main className="m-app">
+        <section className="m-phero">
+          {project.photo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={project.photo} alt="" />
+          ) : (
+            <ProjectArt project={project} className="absolute inset-0 h-full w-full" />
+          )}
+          <div className="m-wrap">
+            <Link href="/donations">← All projects</Link>
+            <span className="m-eyebrow">{project.tag}</span>
+            <h1>{project.title}</h1>
           </div>
         </section>
 
-        <div className="mx-auto max-w-[1100px] px-5 sm:px-8">
-          {/* The idea */}
-          <section className="grid gap-10 py-16 lg:grid-cols-[1fr_320px]">
-            <div>
-              <Reveal>
-                <h2 className="mb-6 font-display text-[32px] font-medium text-emerald-900">
-                  The idea
-                </h2>
-              </Reveal>
-              <div className="space-y-5">
-                {project.idea.map((para, i) => (
-                  <Reveal key={i} delay={i * 80}>
-                    <p className="font-serif text-[18px] leading-relaxed text-ink-soft">
-                      {para}
-                    </p>
-                  </Reveal>
+        <div className="m-wrap m-pbody">
+          <article className="m-story">
+            {(project.tagline || project.impact) && <p className="lead">{project.tagline ?? project.impact}</p>}
+            {(lead || rest.length > 0) && (
+              <div className="txt">
+                {[lead, ...rest].filter(Boolean).map((para, i) => (
+                  <p key={i}>{para}</p>
                 ))}
               </div>
-            </div>
-            <Reveal delay={120}>
-              <aside className="border border-border bg-cream p-6 lg:sticky lg:top-28">
-                <p className="font-sans text-[11px] uppercase tracking-[0.14em] text-ink-muted">
-                  Funding goal
-                </p>
-                <p className="mt-1 font-display text-[34px] font-semibold text-emerald-900">
-                  {ngn(project.goal)}
-                </p>
-                <p className="mt-4 border-t border-border pt-4 font-serif text-[15px] italic leading-relaxed text-ink-soft">
-                  {project.impact}
-                </p>
-                <a href="#give" className="btn btn-gold mt-6 w-full justify-center">
-                  Support this project
-                </a>
-              </aside>
-            </Reveal>
-          </section>
+            )}
+            {project.budget.length > 0 && (
+              <section className="m-stackcol" style={{ gap: 18 }}>
+                <div className="m-rule-h">
+                  <h2 style={{ fontSize: 26 }}>Where the {ngn(project.goal)} goes</h2>
+                </div>
+                <div className="m-stack">
+                  {project.budget.map((b, i) => (
+                    <span key={b.label} style={{ width: `${(b.amount / budgetTotal) * 100}%`, background: COLORS[i % COLORS.length] }} />
+                  ))}
+                </div>
+                <div style={{ overflowX: "auto" }}>
+                  <table className="m-budget m-num">
+                    <tbody>
+                      {project.budget.map((b, i) => (
+                        <tr key={b.label}>
+                          <td style={{ width: 26 }}>
+                            <span className="m-sw" style={{ background: COLORS[i % COLORS.length] }} />
+                          </td>
+                          <td>{b.label}</td>
+                          <td className="r" style={{ color: "var(--m-muted)" }}>{Math.round((b.amount / budgetTotal) * 100)}%</td>
+                          <td className="r" style={{ fontWeight: 700, width: 130 }}>{ngn(b.amount)}</td>
+                        </tr>
+                      ))}
+                      <tr>
+                        <td />
+                        <td>Total</td>
+                        <td />
+                        <td className="r">{ngn(budgetTotal)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
+            {others.length > 0 && (
+              <section className="m-stackcol" style={{ gap: 18 }}>
+                <div className="m-rule-h">
+                  <h2 style={{ fontSize: 26 }}>Other open projects</h2>
+                </div>
+                <div className="m-more">
+                  {others.map((p) => (
+                    <Link key={p.slug} href={`/donations/projects/${p.slug}`}>
+                      <div className="ph">
+                        <ProjectArt project={p} className="h-full w-full" />
+                      </div>
+                      <span style={{ padding: "10px 14px 10px 0" }}>
+                        <span className="m-eyebrow" style={{ display: "block", fontSize: 11 }}>{p.tag}</span>
+                        <b>{p.title}</b>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+          </article>
 
-          {/* Transparency */}
-          <section className="border-t border-border py-16">
-            <Reveal>
-              <p className="mb-2 font-sans text-[11px] uppercase tracking-[0.2em] text-gold-500">
-                Full transparency
-              </p>
-              <h2 className="mb-8 font-display text-[32px] font-medium text-emerald-900">
-                Where every naira goes
-              </h2>
-            </Reveal>
-            <div className="max-w-[760px]">
-              <BudgetBreakdown lines={project.budget} goal={project.goal} />
+          <aside className="m-card m-givep" id="give" aria-label="Give to this project">
+            <div className="m-bar">
+              <span style={{ width: `${pct}%` }} />
             </div>
-          </section>
-
-          {/* Give — directly to this project */}
-          <section id="give" className="scroll-mt-20 border-t border-border py-16">
-            <Reveal>
-              <div className="mx-auto mb-8 max-w-[600px] text-center">
-                <h2 className="font-display text-[clamp(28px,4.5vw,40px)] font-medium leading-tight text-emerald-900">
-                  Support {project.title.toLowerCase()}
-                </h2>
-                <p className="mx-auto mt-3 max-w-[460px] font-serif text-[17px] text-ink-soft">
-                  Give any amount. It goes to this project, is credited to your
-                  class, and is recorded in full.
-                </p>
-              </div>
-            </Reveal>
-            <Reveal delay={120}>
-              <div className="mx-auto max-w-[600px] border-2 border-gold-500/50 p-2 shadow-lg sm:p-3">
-                <GiveForm
-                  me={user.id}
-                  userEmail={user.email ?? ""}
-                  donorName={profile?.full_name ?? ""}
-                  donorYear={myYear}
-                  donorClassLabel={myClassLabel}
-                  projectId={project.id}
-                  projectTitle={project.title}
-                />
-              </div>
-            </Reveal>
-          </section>
-
-          {/* Other projects */}
-          <section className="border-t border-border py-14">
-            <h3 className="mb-6 font-display text-[24px] font-medium text-emerald-900">
-              More ways to give
-            </h3>
-            <div className="grid gap-6 sm:grid-cols-2">
-              {others.map((p) => (
-                <Link
-                  key={p.slug}
-                  href={`/donations/projects/${p.slug}`}
-                  className="group flex items-center gap-5 overflow-hidden border border-border bg-cream transition-all hover:border-emerald-700 hover:shadow-soft"
-                >
-                  <div className="h-24 w-32 shrink-0 overflow-hidden">
-                    <ProjectArt project={p} className="h-full w-full" />
-                  </div>
-                  <div className="py-3 pr-4">
-                    <p className="font-sans text-[10px] uppercase tracking-[0.14em] text-gold-500">
-                      {p.tag}
-                    </p>
-                    <p className="font-display text-[20px] font-semibold text-emerald-900">
-                      {p.title}
-                    </p>
-                  </div>
-                </Link>
-              ))}
+            <div className="m-row m-num" style={{ fontSize: 15 }}>
+              <span>
+                <strong>{ngn(raised)}</strong> raised
+              </span>
+              <span style={{ color: "var(--m-muted)" }}>of {ngn(project.goal)}</span>
             </div>
-          </section>
+            <GiveForm
+              me={user.id}
+              userEmail={user.email ?? ""}
+              donorName={profile?.full_name ?? ""}
+              donorYear={myYear}
+              donorClassLabel={myClassLabel}
+              projectId={project.id}
+              projectTitle={project.title}
+            />
+          </aside>
         </div>
       </main>
       <SiteFooter />

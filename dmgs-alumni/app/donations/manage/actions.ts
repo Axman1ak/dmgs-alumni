@@ -46,8 +46,8 @@ export async function saveProject(
   if (error) return { error: error.message };
 
   revalidatePath("/donations");
-  revalidatePath("/donations/manage");
-  redirect("/donations/manage");
+  revalidatePath("/admin");
+  redirect("/admin?tab=projects");
 }
 
 export async function deleteProject(formData: FormData) {
@@ -56,7 +56,7 @@ export async function deleteProject(formData: FormData) {
   if (id) {
     await supabase.from("projects").delete().eq("id", id);
     revalidatePath("/donations");
-    revalidatePath("/donations/manage");
+    revalidatePath("/admin");
   }
-  redirect("/donations/manage");
+  redirect("/admin?tab=projects");
 }
