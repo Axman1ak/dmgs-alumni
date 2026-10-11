@@ -29,7 +29,8 @@ export default async function EventsPage({ searchParams }: { searchParams: { tab
       supabase.from("event_rsvps").select("event_id, profile_id"),
     ]);
 
-  const canManage = profile?.role === "super_admin";
+  // Super admins and class admins create, edit and cancel events.
+  const canManage = profile?.role === "super_admin" || profile?.role === "class_admin";
   const rows = (events ?? []) as AlumniEvent[];
 
   const counts = new Map<string, number>();
@@ -44,17 +45,18 @@ export default async function EventsPage({ searchParams }: { searchParams: { tab
 
   // Attendee lists, for super admins only.
   const attendeesByEvent = new Map<string, Attendee[]>();
-  if (canManage && (rsvps ?? []).length) {
-    const ids = Array.from(new Set((rsvps ?? []).map((r) => r.profile_id)));
-    const { data: people } = await supabase.from("profiles").select("id, full_name, class_year, email").in("id", ids);
-    const byId = new Map((people ?? []).map((p) => [p.id, p]));
-    for (const r of rsvps ?? []) {
-      const p = byId.get(r.profile_id);
-      const list = attendeesByEvent.get(r.event_id) ?? [];
-      list.push({ name: p?.full_name ?? "Member", classYear: p?.class_year ?? null, email: p?.email ?? null });
-      attendeesByEvent.set(r.event_id, list);
-    }
-    attendeesByEvent.forEach((l) => l.sort((a, b) => a.name.localeCompare(b.name)));
+  if (canManage) {
+    // Names, class and email come from a database function that only event
+    // managers may call (members can't read each other's emails).
+    const withRsvps = rows.filter((e) => (counts.get(e.id) ?? 0) > 0);
+    const lists = await Promise.all(withRsvps.map((e) => supabase.rpc("event_attendees", { p_event: e.id })));
+    withRsvps.forEach((e, i) => {
+      const data = (lists[i].data ?? []) as { name: string; class_year: number | null; email: string | null }[];
+      attendeesByEvent.set(
+        e.id,
+        data.map((d) => ({ name: d.name ?? "Member", classYear: d.class_year, email: d.email })),
+      );
+    });
   }
 
   past.reverse(); // most recent first

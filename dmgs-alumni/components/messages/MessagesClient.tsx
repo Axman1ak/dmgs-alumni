@@ -54,17 +54,34 @@ export function MessagesClient({
 
   const markRead = useCallback(
     async (chatId: string) => {
-      await supabase
-        .from("chat_members")
-        .update({ last_read_at: new Date().toISOString() })
-        .eq("chat_id", chatId)
-        .eq("profile_id", me);
+      await supabase.rpc("mark_chat_read", { p_chat: chatId });
       setConversations((prev) =>
         prev.map((c) => (c.id === chatId ? { ...c, unread: 0 } : c)),
       );
     },
-    [supabase, me],
+    [supabase],
   );
+
+  const [menuOpen, setMenuOpen] = useState(false);
+  useEffect(() => setMenuOpen(false), [activeId]);
+
+  async function deleteConversation() {
+    if (!active || active.type === "broadcast") return;
+    const ok = window.confirm(
+      `Delete this conversation with ${active.name}? It disappears from your messages. ` +
+        "The other person keeps their copy, and a new message will bring it back.",
+    );
+    if (!ok) return;
+    setMenuOpen(false);
+    const { error } = await supabase.rpc("clear_chat", { p_chat: active.id });
+    if (error) {
+      window.alert("Could not delete the conversation. Please try again.");
+      return;
+    }
+    setConversations((prev) => prev.filter((c) => c.id !== active.id));
+    setActiveId(null);
+    setMessages([]);
+  }
 
   // Load messages + subscribe to realtime whenever the active chat changes.
   useEffect(() => {
@@ -77,7 +94,9 @@ export function MessagesClient({
         .select("id, chat_id, sender_id, body, created_at")
         .eq("chat_id", activeId)
         .order("created_at", { ascending: true });
-      if (!cancelled) setMessages((data ?? []) as ChatMessage[]);
+      const cleared = conversations.find((c) => c.id === activeId)?.clearedAt ?? null;
+      const rows = (data ?? []) as ChatMessage[];
+      if (!cancelled) setMessages(cleared ? rows.filter((m) => m.created_at > cleared) : rows);
     })();
 
     markRead(activeId);
@@ -221,6 +240,30 @@ export function MessagesClient({
                       {active.type === "broadcast" ? (isSuperAdmin ? "Announcements · you can post" : "Announcements") : KIND[active.type]}
                     </span>
                   </div>
+                  {active.type !== "broadcast" && (
+                    <div className="m-thread-menu">
+                      <button
+                        type="button"
+                        className="gear"
+                        aria-label="Conversation settings"
+                        aria-haspopup="menu"
+                        aria-expanded={menuOpen}
+                        onClick={() => setMenuOpen((v) => !v)}
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <circle cx="12" cy="12" r="3" />
+                          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                        </svg>
+                      </button>
+                      {menuOpen && (
+                        <div className="pop" role="menu">
+                          <button type="button" role="menuitem" onClick={deleteConversation}>
+                            Delete conversation
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 <div className="list" ref={listRef}>

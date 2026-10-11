@@ -7,6 +7,8 @@ export type Conversation = {
   lastMessage: string | null;
   lastAt: string | null;
   unread: number;
+  /** Set when the member deleted the conversation for themselves. */
+  clearedAt?: string | null;
 };
 
 export type ChatMessage = {

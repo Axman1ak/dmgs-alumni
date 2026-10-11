@@ -5,6 +5,7 @@ import { ngn, shortDate } from "@/lib/format";
 import { DuesAmountForm } from "@/components/donations/DuesAmountForm";
 import { PrintButton } from "@/components/donations/PrintButton";
 import { CsvButton } from "./CsvButton";
+import { Expandable } from "./Expandable";
 
 type Gift = {
   id: string;
@@ -32,9 +33,16 @@ type ClassTotals = {
 const VIEWS = [
   ["projects", "By project"],
   ["classes", "By class"],
+  ["donors", "By donor"],
   ["payments", "All payments"],
 ] as const;
 type View = (typeof VIEWS)[number][0];
+
+/** Real name, for admin donor reports (receipts, thanks). */
+const realName = (g: Gift) => g.donor_name ?? "Member (account deleted)";
+const donorKey = (g: Gift) => g.donor_profile_id ?? `name:${g.donor_name ?? "unknown"}`;
+const what = (g: Gift, titleById: Map<string, string>) =>
+  g.kind === "dues" ? `${g.period_year ?? ""} dues`.trim() : (g.project_id && titleById.get(g.project_id)) || "General fund";
 
 const name = (g: Gift) => (g.is_anonymous ? "Anonymous" : g.donor_name ?? "Member");
 const pctOf = (a: number, b: number) => (b > 0 ? Math.min(100, Math.round((a / b) * 100)) : 0);
@@ -49,12 +57,14 @@ export async function GivingTab({
   view: viewParam,
   projectId,
   kind,
+  donor,
 }: {
   isSuper: boolean;
   adminYear: number | null;
   view?: string;
   projectId?: string;
   kind?: string;
+  donor?: string;
 }) {
   const supabase = createClient();
   const year = new Date().getFullYear();
@@ -187,6 +197,80 @@ export async function GivingTab({
     );
   }
 
+  // ---------- one donor ----------
+  if (view === "donors" && donor) {
+    const titleById = new Map(projects.map((p) => [p.id, p.title]));
+    const list = gifts.filter((g) => donorKey(g) === donor);
+    const total = list.reduce((s, g) => s + Number(g.amount), 0);
+    const who = list[0] ? realName(list[0]) : "Unknown donor";
+    const where = new Map<string, number>();
+    list.forEach((g) => {
+      const k = what(g, titleById);
+      where.set(k, (where.get(k) ?? 0) + Number(g.amount));
+    });
+    const anon = list.some((g) => g.is_anonymous);
+    return (
+      <div className="m-stackcol" style={{ gap: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+          <Link className="m-link" href={tabHref("donors")} style={{ fontSize: 14 }}>
+            ← All donors
+          </Link>
+          <div style={{ display: "flex", gap: 8 }} className="m-noprint">
+            <CsvButton
+              filename={`${who.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}-gifts.csv`}
+              rows={[["For", "Amount (NGN)", "Date", "Anonymous"], ...list.map((g) => [what(g, titleById), Number(g.amount), g.created_at.slice(0, 10), g.is_anonymous ? "yes" : "no"])]}
+            />
+            <PrintButton />
+          </div>
+        </div>
+        <section className="m-card" style={{ padding: 28, display: "flex", flexDirection: "column", gap: 16 }}>
+          <span className="m-eyebrow">Donor report</span>
+          <h2 style={{ fontSize: 28, color: "var(--m-emerald)" }}>{who}</h2>
+          <span style={{ fontSize: 14, color: "var(--m-muted)" }}>
+            {list[0]?.class_year ? `Class of ${list[0].class_year}` : "Class not set"}
+            {anon ? " · some gifts were made anonymously (their name is hidden from other members)" : ""}
+          </span>
+          <div className="m-kpis m-num m-kpis4" style={{ border: "1px solid var(--m-line)" }}>
+            <div><b>{ngn(total)}</b><span>Given in total</span></div>
+            <div><b>{list.length}</b><span>Gifts</span></div>
+            <div><b>{list.length ? shortDate(list[list.length - 1].created_at) : "–"}</b><span>First gift</span></div>
+            <div><b>{list.length ? shortDate(list[0].created_at) : "–"}</b><span>Latest gift</span></div>
+          </div>
+        </section>
+        <section className="m-stackcol" style={{ gap: 12 }}>
+          <h3 style={{ fontSize: 20, color: "var(--m-emerald)" }}>Where they gave</h3>
+          <div className="m-table-wrap">
+            <table className="m-table m-num">
+              <thead><tr><th>For</th><th className="r">Amount</th><th className="r">Share</th></tr></thead>
+              <tbody>
+                {Array.from(where.entries()).sort((a, b) => b[1] - a[1]).map(([k, v]) => (
+                  <tr key={k}><td>{k}</td><td className="r"><b>{ngn(v)}</b></td><td className="r">{pctOf(v, total)}%</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+        <section className="m-stackcol" style={{ gap: 12 }}>
+          <h3 style={{ fontSize: 20, color: "var(--m-emerald)" }}>All gifts</h3>
+          <div className="m-table-wrap">
+            <table className="m-table m-num">
+              <thead><tr><th>For</th><th className="r">Amount</th><th className="r">Date</th></tr></thead>
+              <tbody>
+                {list.map((g) => (
+                  <tr key={g.id}>
+                    <td>{what(g, titleById)}{g.is_anonymous && <span style={{ color: "var(--m-muted)", fontSize: 13 }}> · anonymous</span>}</td>
+                    <td className="r"><b>{ngn(Number(g.amount))}</b></td>
+                    <td className="r">{shortDate(g.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
   // ---------- overview ----------
   return (
     <div className="m-stackcol" style={{ gap: 24 }}>
@@ -213,6 +297,7 @@ export async function GivingTab({
       {view === "classes" && (
         <ClassesTable rows={(classRows ?? []) as ClassTotals[]} isSuper={isSuper} adminYear={adminYear} />
       )}
+      {view === "donors" && <DonorsTable gifts={gifts} projects={projects} isSuper={isSuper} tabHref={tabHref} />}
       {view === "payments" && (
         <PaymentsView gifts={gifts} kind={kind} projects={projects} isSuper={isSuper} tabHref={tabHref} />
       )}
@@ -321,6 +406,7 @@ function ClassesTable({ rows, isSuper, adminYear }: { rows: ClassTotals[]; isSup
             </tr>
           </thead>
           <tbody>
+            <Expandable initial={15} step={15} noun="classes" colSpan={7} labels={list.map((c) => `${c.label} ${c.year}`)} searchPlaceholder="Find a class, e.g. 1978">
             {list.map((c) => (
               <tr key={c.year}>
                 <td><b>{c.label}</b></td>
@@ -338,6 +424,7 @@ function ClassesTable({ rows, isSuper, adminYear }: { rows: ClassTotals[]; isSup
                 </td>
               </tr>
             ))}
+            </Expandable>
           </tbody>
         </table>
       </div>
@@ -391,6 +478,89 @@ function PaymentsView({
   );
 }
 
+function DonorsTable({
+  gifts,
+  projects,
+  isSuper,
+  tabHref,
+}: {
+  gifts: Gift[];
+  projects: ReturnType<typeof mapProject>[];
+  isSuper: boolean;
+  tabHref: (v: string, extra?: string) => string;
+}) {
+  const titleById = new Map(projects.map((p) => [p.id, p.title]));
+  const byDonor = new Map<string, { key: string; name: string; classYear: number | null; total: number; gifts: number; places: Set<string>; last: string }>();
+  for (const g of gifts) {
+    const k = donorKey(g);
+    const d = byDonor.get(k) ?? { key: k, name: realName(g), classYear: g.class_year, total: 0, gifts: 0, places: new Set<string>(), last: g.created_at };
+    d.total += Number(g.amount);
+    d.gifts += 1;
+    d.places.add(what(g, titleById));
+    if (g.created_at > d.last) d.last = g.created_at;
+    byDonor.set(k, d);
+  }
+  const rows = Array.from(byDonor.values()).sort((a, b) => b.total - a.total);
+  if (rows.length === 0) return <div className="m-card m-empty">No gifts recorded yet.</div>;
+  return (
+    <div className="m-stackcol" style={{ gap: 12 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <span style={{ fontSize: 14, color: "var(--m-muted)" }}>
+          {rows.length} {rows.length === 1 ? "donor" : "donors"} · sorted by total given
+        </span>
+        <CsvButton
+          filename="donors.csv"
+          rows={[["Donor", "Class", "Total (NGN)", "Gifts", "Gave to", "Latest gift"], ...rows.map((d) => [d.name, d.classYear, d.total, d.gifts, Array.from(d.places).join("; "), d.last.slice(0, 10)])]}
+        />
+      </div>
+      <div className="m-table-wrap">
+        <table className="m-table m-num">
+          <thead>
+            <tr>
+              <th>Donor</th>
+              {isSuper && <th>Class</th>}
+              <th className="r">Total</th>
+              <th className="r">Gifts</th>
+              <th>Gave to</th>
+              <th>Latest</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            <Expandable
+              initial={25}
+              step={25}
+              noun="donors"
+              colSpan={isSuper ? 7 : 6}
+              labels={rows.map((d) => `${d.name} ${d.classYear ?? ""}`)}
+              searchPlaceholder="Find a donor by name or class"
+            >
+              {rows.map((d) => (
+                <tr key={d.key}>
+                  <td><b>{d.name}</b></td>
+                  {isSuper && <td>{d.classYear ?? "–"}</td>}
+                  <td className="r"><b>{ngn(d.total)}</b></td>
+                  <td className="r">{d.gifts}</td>
+                  <td style={{ maxWidth: 280 }}>{Array.from(d.places).join(", ")}</td>
+                  <td>{shortDate(d.last)}</td>
+                  <td className="r">
+                    <Link className="m-link" style={{ fontSize: 14 }} href={tabHref("donors", `&donor=${encodeURIComponent(d.key)}`)}>
+                      Details →
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </Expandable>
+          </tbody>
+        </table>
+      </div>
+      <p style={{ fontSize: 13, color: "var(--m-muted)" }}>
+        Admin view: donors who chose to give anonymously are named here so you can thank them and issue receipts. Their names stay hidden from other members.
+      </p>
+    </div>
+  );
+}
+
 function GiftTable({
   rows,
   showClass,
@@ -416,6 +586,7 @@ function GiftTable({
           </tr>
         </thead>
         <tbody>
+          <Expandable initial={25} step={50} noun="payments" colSpan={2 + (showWhat ? 1 : 0) + (showClass ? 1 : 0) + 1}>
           {rows.map((g) => (
             <tr key={g.id}>
               <td>{name(g)}</td>
@@ -427,6 +598,7 @@ function GiftTable({
               <td className="r">{shortDate(g.created_at)}</td>
             </tr>
           ))}
+          </Expandable>
         </tbody>
       </table>
     </div>

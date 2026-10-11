@@ -8,6 +8,7 @@ import { approveMember, rejectMember } from "./actions";
 import { shortDate } from "@/lib/format";
 import { GivingTab } from "@/components/admin/GivingTab";
 import { ProjectsTab } from "@/components/admin/ProjectsTab";
+import { Expandable } from "@/components/admin/Expandable";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,7 @@ type Tab = "approvals" | "members" | "giving" | "projects";
 export default async function AdminPage({
   searchParams,
 }: {
-  searchParams: { tab?: string; view?: string; project?: string; kind?: string; edit?: string };
+  searchParams: { tab?: string; view?: string; project?: string; kind?: string; edit?: string; donor?: string };
 }) {
   const supabase = createClient();
   const {
@@ -74,6 +75,7 @@ export default async function AdminPage({
               view={searchParams.view}
               projectId={searchParams.project}
               kind={searchParams.kind}
+              donor={searchParams.donor}
             />
           )}
           {tab === "projects" && <ProjectsTab uid={user.id} edit={searchParams.edit} />}
@@ -104,6 +106,13 @@ async function Approvals() {
   }
   return (
     <section className="m-stackcol" style={{ gap: 16, maxWidth: 980 }}>
+      <Expandable
+        initial={10}
+        step={10}
+        noun="requests"
+        labels={pendingRows.map((p) => `${p.full_name} ${p.email ?? ""} ${p.class_year ?? ""}`)}
+        searchPlaceholder="Search requests by name, email or class"
+      >
       {pendingRows.map((p) => (
         <article key={p.id} className="m-card m-req">
           <div className="top">
@@ -143,6 +152,7 @@ async function Approvals() {
           </div>
         </article>
       ))}
+      </Expandable>
     </section>
   );
 }
@@ -154,11 +164,21 @@ async function Members({ selfId }: { selfId: string }) {
     .select("id, full_name, email, role, class_year, admin_of_year")
     .eq("status", "approved")
     .order("full_name");
+  const list = members ?? [];
   return (
-    <div className="m-card" style={{ overflow: "hidden" }}>
-      {(members ?? []).map((m) => (
-        <MemberRow key={m.id} member={m} isSelf={m.id === selfId} />
-      ))}
+    <div className="m-stackcol" style={{ gap: 12 }}>
+      <Expandable
+        initial={25}
+        step={25}
+        noun="members"
+        wrap="m-card m-members"
+        labels={list.map((m) => `${m.full_name} ${m.email ?? ""} ${m.class_year ?? ""} ${m.role.replace("_", " ")}`)}
+        searchPlaceholder="Search members by name, email, class or role"
+      >
+        {list.map((m) => (
+          <MemberRow key={m.id} member={m} isSelf={m.id === selfId} />
+        ))}
+      </Expandable>
     </div>
   );
 }
